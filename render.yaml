@@ -2,8 +2,10 @@ services:
   - type: web
     name: promts
     runtime: node
-    buildCommand: npm install --production=false
+    buildCommand: npm install --omit=dev
     startCommand: node server.js
     envVars:
+      - key: NODE_VERSION
+        value: "20.11.0"
       - key: GEMINI_API_KEY
         sync: false
