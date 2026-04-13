@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: promts
+    runtime: node
+    buildCommand: npm install && npm run build
+    startCommand: node server.js
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
