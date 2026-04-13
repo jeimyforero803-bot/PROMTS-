@@ -147,13 +147,18 @@ export default function App() {
         const ws = wb.Sheets[wsname];
 
         // Use sheet_to_json to get REAL rows (not broken CSV lines)
-        const rows = XLSX.utils.sheet_to_json<Record<string, string>>(ws, { defval: '' });
+        const allRows = XLSX.utils.sheet_to_json<Record<string, string>>(ws, { defval: '' });
+
+        // Filter: only rows where at least one cell has real content
+        const headers = Object.keys(allRows[0] || {});
+        const rows = allRows.filter(row =>
+          headers.some(h => String(row[h] || '').trim().length > 0)
+        );
 
         setExcelRows(rows);
         setFileName(file.name);
 
-        // Build clean tab-separated text for display (no line breaks inside cells)
-        const headers = Object.keys(rows[0] || {});
+        // Build clean tab-separated text for display
         const displayLines = [headers.join('\t')];
         rows.forEach(row => {
           displayLines.push(headers.map(h => String(row[h] || '').replace(/[\n\r]+/g, ' ')).join('\t'));
