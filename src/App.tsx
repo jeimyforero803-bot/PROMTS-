@@ -26,6 +26,8 @@ export default function App() {
   const [isRegenerating, setIsRegenerating] = useState(false);
 
   const [progress, setProgress] = useState('');
+  const [sheetNames, setSheetNames] = useState<string[]>([]);
+  const [pendingWorkbook, setPendingWorkbook] = useState<any>(null);
 
   const handleExportExcel = () => {
     if (creatives.length === 0) return;
@@ -134,6 +136,75 @@ export default function App() {
     }
   };
 
+  const processSheet = (wb: any, sheetName: string, fName: string) => {
+    const ws = wb.Sheets[sheetName];
+    const rawRows = XLSX.utils.sheet_to_json<string[]>(ws, { header: 1, defval: '' });
+
+    const KNOWN_HEADERS = ['MEDIO', 'CAMPAÑA', 'OBJETIVO', 'AUDIENCIAS', 'CREATIVO', 'REFERENCIA', 'MES', 'FORMATO', 'PIEZAS', 'DRIVER', 'TAMAÑO'];
+    let headerRowIdx = -1;
+    for (let i = 0; i < Math.min(rawRows.length, 20); i++) {
+      const rowVals = rawRows[i].map(v => String(v || '').toUpperCase().trim());
+      const matches = KNOWN_HEADERS.filter(kw => rowVals.some(v => v.includes(kw)));
+      if (matches.length >= 3) {
+        headerRowIdx = i;
+        break;
+      }
+    }
+
+    if (headerRowIdx === -1) {
+      for (let i = 0; i < Math.min(rawRows.length, 20); i++) {
+        const filled = rawRows[i].filter(v => String(v || '').trim().length > 0);
+        if (filled.length >= 5) {
+          headerRowIdx = i;
+          break;
+        }
+      }
+    }
+
+    if (headerRowIdx === -1) headerRowIdx = 0;
+
+    const headers = rawRows[headerRowIdx].map((h, i) => {
+      const val = String(h || '').trim();
+      return val || `COL_${i}`;
+    });
+
+    const dataRows = rawRows.slice(headerRowIdx + 1);
+
+    const rows = dataRows
+      .map(rawRow => {
+        const obj: Record<string, string> = {};
+        headers.forEach((h, i) => {
+          obj[h] = String(rawRow[i] || '').replace(/[\n\r]+/g, ' ').trim();
+        });
+        return obj;
+      })
+      .filter(row => {
+        const filled = headers.filter(h => row[h] && row[h].length > 0 && row[h] !== '0');
+        if (filled.length < 3) return false;
+
+        const KEY_COLS = ['MEDIO', 'CAMPAÑA', 'OBJETIVO', 'CREATIVO', 'AUDIENCIAS'];
+        const hasKeyCol = headers.some(h => {
+          const hUp = h.toUpperCase().trim();
+          const isKey = KEY_COLS.some(k => hUp.includes(k));
+          return isKey && row[h] && row[h].trim().length > 0;
+        });
+        return hasKeyCol;
+      });
+
+    setExcelRows(rows);
+    setFileName(fName);
+    setSheetNames([]);
+    setPendingWorkbook(null);
+
+    const displayLines = [headers.join('\t')];
+    rows.forEach(row => {
+      displayLines.push(headers.map(h => String(row[h] || '').replace(/[\n\r]+/g, ' ')).join('\t'));
+    });
+
+    setInputText(`[Nombre del archivo original: ${fName}] [Hoja: ${sheetName}]\n\n${displayLines.join('\n')}`);
+    setError(null);
+  };
+
   const handleTextFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -143,81 +214,25 @@ export default function App() {
       try {
         const bstr = evt.target?.result;
         const wb = XLSX.read(bstr, { type: 'binary' });
-        const wsname = wb.SheetNames[0];
-        const ws = wb.Sheets[wsname];
 
-        // Find the REAL header row (the one with column names like MEDIO, CAMPAÑA, etc.)
-        // The Excel may have title rows above the actual data table
-        const rawRows = XLSX.utils.sheet_to_json<string[]>(ws, { header: 1, defval: '' });
+        // Auto-detect: prefer sheet with "MATRICES" in name
+        const matricesSheet = wb.SheetNames.find((n: string) =>
+          n.toUpperCase().includes('MATRICES') || n.toUpperCase().includes('MATRIZ')
+        );
 
-        // Detect header row: look for a row containing known keywords
-        const KNOWN_HEADERS = ['MEDIO', 'CAMPAÑA', 'OBJETIVO', 'AUDIENCIAS', 'CREATIVO', 'REFERENCIA', 'MES', 'FORMATO', 'PIEZAS'];
-        let headerRowIdx = -1;
-        for (let i = 0; i < Math.min(rawRows.length, 20); i++) {
-          const rowVals = rawRows[i].map(v => String(v || '').toUpperCase().trim());
-          const matches = KNOWN_HEADERS.filter(kw => rowVals.some(v => v.includes(kw)));
-          if (matches.length >= 3) {
-            headerRowIdx = i;
-            break;
-          }
+        if (matricesSheet) {
+          // Found the right sheet automatically
+          processSheet(wb, matricesSheet, file.name);
+        } else if (wb.SheetNames.length > 1) {
+          // Multiple sheets, no "MATRICES" found — let user pick
+          setSheetNames(wb.SheetNames);
+          setPendingWorkbook(wb);
+          setFileName(file.name);
+          setError(null);
+        } else {
+          // Single sheet — use it
+          processSheet(wb, wb.SheetNames[0], file.name);
         }
-
-        if (headerRowIdx === -1) {
-          // Fallback: use first row with 5+ non-empty cells
-          for (let i = 0; i < Math.min(rawRows.length, 20); i++) {
-            const filled = rawRows[i].filter(v => String(v || '').trim().length > 0);
-            if (filled.length >= 5) {
-              headerRowIdx = i;
-              break;
-            }
-          }
-        }
-
-        if (headerRowIdx === -1) headerRowIdx = 0;
-
-        // Extract headers and data rows from the detected position
-        const headers = rawRows[headerRowIdx].map((h, i) => {
-          const val = String(h || '').trim();
-          return val || `COL_${i}`;
-        });
-
-        const dataRows = rawRows.slice(headerRowIdx + 1);
-
-        // Convert to objects and filter rows with at least 3 filled columns
-        const rows = dataRows
-          .map(rawRow => {
-            const obj: Record<string, string> = {};
-            headers.forEach((h, i) => {
-              obj[h] = String(rawRow[i] || '').replace(/[\n\r]+/g, ' ').trim();
-            });
-            return obj;
-          })
-          .filter(row => {
-            // Must have at least 3 filled columns
-            const filled = headers.filter(h => row[h] && row[h].length > 0 && row[h] !== '0');
-            if (filled.length < 3) return false;
-
-            // Must have at least ONE key column with a real value
-            const KEY_COLS = ['MEDIO', 'CAMPAÑA', 'OBJETIVO', 'CREATIVO', 'AUDIENCIAS'];
-            const hasKeyCol = headers.some(h => {
-              const hUp = h.toUpperCase().trim();
-              const isKey = KEY_COLS.some(k => hUp.includes(k));
-              return isKey && row[h] && row[h].trim().length > 0;
-            });
-            return hasKeyCol;
-          });
-
-        setExcelRows(rows);
-        setFileName(file.name);
-
-        // Build clean tab-separated text for display
-        const displayLines = [headers.join('\t')];
-        rows.forEach(row => {
-          displayLines.push(headers.map(h => String(row[h] || '').replace(/[\n\r]+/g, ' ')).join('\t'));
-        });
-
-        setInputText(`[Nombre del archivo original: ${file.name}]\n\n${displayLines.join('\n')}`);
-        setError(null);
       } catch (err) {
         console.error(err);
         setError("Error al leer el archivo. Asegúrate de que sea un Excel o CSV válido.");
@@ -332,6 +347,25 @@ export default function App() {
                 <input type="file" className="hidden" accept=".xlsx, .xls, .csv, .txt" onChange={handleTextFileUpload} />
               </label>
             </div>
+
+            {/* Sheet selector when Excel has multiple sheets */}
+            {sheetNames.length > 1 && pendingWorkbook && (
+              <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                <p className="text-sm font-bold text-amber-800 mb-3">Este archivo tiene {sheetNames.length} hojas. Selecciona la correcta:</p>
+                <div className="space-y-2">
+                  {sheetNames.map((name: string) => (
+                    <button
+                      key={name}
+                      onClick={() => processSheet(pendingWorkbook, name, fileName)}
+                      className="w-full text-left px-4 py-2.5 bg-white hover:bg-green-50 border border-amber-200 hover:border-green-500 rounded-lg text-sm font-medium text-gray-800 transition-all flex items-center gap-2"
+                    >
+                      <Layers className="w-4 h-4 text-amber-600" />
+                      {name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="relative mb-4">
               <div className="absolute inset-0 flex items-center" aria-hidden="true">
