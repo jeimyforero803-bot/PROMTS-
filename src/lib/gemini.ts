@@ -23,8 +23,8 @@ export interface CreativeSpec {
 }
 
 export async function extractAndOptimizePrompts(inputText: string): Promise<CreativeSpec[]> {
-  // Allow up to 60KB to support 50+ rows
-  const truncatedInput = inputText.slice(0, 60000);
+  // Allow up to 100KB to support 80+ rows with audience data
+  const truncatedInput = inputText.slice(0, 100000);
 
   try {
     const timeoutPromise = new Promise<never>((_, reject) => {
@@ -33,10 +33,21 @@ export async function extractAndOptimizePrompts(inputText: string): Promise<Crea
 
     const callGemini = async (useBackup = false) => getAI(useBackup).models.generateContent({
       model: "gemini-2.5-flash",
-      contents: `You are an Expert Prompt Engineer specializing in DCO (Dynamic Creative Optimization), Copywriting, and Brand Consistency.
+      contents: `You are an Expert Prompt Engineer specializing in DCO (Dynamic Creative Optimization), Audience Strategy, Copywriting, and Brand Consistency.
 
-The user has provided a document (parsed from Excel/CSV/Text) containing creative specifications from their client.
-Your PRIMARY goal is to generate a "Master Prompt" (Prompt Maestro) for each row that focuses on placing the TITLE and COPY text into the creative, along with suggested copywriting.
+The user has provided a document (parsed from Excel/CSV/Text) containing creative specifications.
+Your PRIMARY goals:
+A) IDENTIFY every unique "Audiencia Referencia" (reference audience) column/grouping in the data.
+B) For EACH reference audience, understand the COMMUNICATION DRIVERS — what motivates that specific audience, what pain points they have, what messaging resonates with them.
+C) Generate creatives that speak to HOW to reach the GENERAL audience THROUGH the specific reference audience. The copy and context must reflect the audience's language, interests, and triggers.
+D) Generate a "Master Prompt" for each row focused on text placement.
+
+AUDIENCE STRATEGY LOGIC:
+- Each "Audiencia Referencia" is a SPECIFIC sub-segment that serves as the entry point to reach a broader general audience.
+- The COMMUNICATION DRIVER tells you WHY this audience cares, WHAT motivates their action.
+- Your suggestedTitle and suggestedCopy MUST reflect the driver and speak directly to that reference audience's mindset.
+- Different reference audiences for the same brand MUST have different copy angles — never repeat the same generic message.
+- Example: If driver is "precio" for "Familias ahorrativas", copy should emphasize savings. If driver is "innovación" for "Early adopters tech", copy should emphasize novelty.
 
 CRITICAL RULES:
 1. "Zelva" (or Zelva Agencia Creativa) is the creative agency, IT IS NOT THE BRAND. Never use Zelva as the brand.
@@ -46,7 +57,8 @@ CRITICAL RULES:
    - suggestedTitle: MAXIMUM 30 characters including spaces. Count EVERY character. If it exceeds 30, shorten it.
    - suggestedCopy: MAXIMUM 90 characters including spaces. Count EVERY character. If it exceeds 90, shorten it.
    - BEFORE returning each title/copy, mentally count the characters. If over the limit, rewrite shorter.
-5. PROCESS EVERY ROW: You MUST process ALL rows in the input, up to 60 creatives. Do NOT skip rows. Do NOT stop at 14 or 20.
+5. PROCESS EVERY SINGLE ROW: You MUST generate one creative per row in the input. If there are 50 rows, return 50 creatives. If there are 60, return 60. NEVER stop early. NEVER skip rows. Count the rows first, then generate that exact number.
+6. If the document has columns like "Audiencia", "Audiencia Referencia", "Driver", "Comunicación", "Mensaje", "Insight" — USE THEM to differentiate the copy per audience.
 
 THE MASTER PROMPT MUST FOCUS ON TEXT PLACEMENT:
 The Master Prompt is for an AI image generator. Its primary job is to tell the AI WHERE and HOW to place the Title and Copy text onto a creative/ad visual. The prompt structure must be:
@@ -64,15 +76,18 @@ SPANISH Master Prompt: Exact translation of the English version.
 For each row generate:
 1. identifiedBrand: The actual brand name.
 2. formatAndSize: Dimensions from the document (e.g., "1080x1080", "300x250"). If not specified, use "1080x1080".
-3. campaignContext: Brief campaign objective summary in Spanish.
-4. suggestedTitle: Catchy title in Spanish. STRICTLY ≤30 characters. COUNT THEM.
-5. suggestedCopy: Compelling ad text in Spanish. STRICTLY ≤90 characters. COUNT THEM.
+3. campaignContext: In Spanish — include the reference audience name, the communication driver, and the campaign objective. E.g., "Audiencia: Familias ahorrativas | Driver: Precio accesible | Objetivo: Generar awareness de promoción escolar".
+4. suggestedTitle: In Spanish, tailored to the specific reference audience and driver. STRICTLY ≤30 characters. COUNT THEM.
+5. suggestedCopy: In Spanish, tailored to the specific reference audience and driver. STRICTLY ≤90 characters. COUNT THEM.
 6. brandGuidelines: Colors, tone, layout rules in Spanish.
 7. masterPromptEn: English Master Prompt focused on text placement (structure above).
 8. masterPromptEs: Spanish Master Prompt (translation of above).
 9. resizePrompt: "Seamlessly extend the background to fit the new canvas size, maintaining exact lighting, textures, and visual style. STRICTLY preserve all existing text, titles, copy, and prices without alterations or distortions. Keep main subjects untouched and preserve negative space."
 
-IMPORTANT: Process ALL rows (up to 60). Do NOT stop early. Ignore empty rows or invalid data.
+IMPORTANT:
+- Count the input rows FIRST. Then generate EXACTLY that many creatives (up to 80).
+- Do NOT stop at 14, 20, or 24. Process ALL rows.
+- Each creative must have UNIQUE copy tailored to its specific audience + driver combination.
 
 Input specifications (Client Requirements):
 ${truncatedInput}
