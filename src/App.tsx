@@ -23,18 +23,70 @@ export default function App() {
   const [regenFeedback, setRegenFeedback] = useState('');
   const [isRegenerating, setIsRegenerating] = useState(false);
 
+  const [progress, setProgress] = useState('');
+
   const handleAnalyze = async () => {
     if (!inputText.trim()) return;
 
     setIsAnalyzing(true);
     setError(null);
+    setCreatives([]);
+    setProgress('Preparando lotes...');
+
     try {
-      const specs = await extractAndOptimizePrompts(inputText);
-      setCreatives(specs);
+      const lines = inputText.split('\n');
+      // Find header line (first non-empty, non-filename line)
+      let headerIdx = 0;
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i].trim().length > 0 && !lines[i].startsWith('[Nombre')) {
+          headerIdx = i;
+          break;
+        }
+      }
+      const fileContext = lines.slice(0, headerIdx).join('\n').trim();
+      const headerLine = lines[headerIdx];
+      const dataLines = lines.slice(headerIdx + 1).filter(l => l.trim().length > 0);
+
+      const BATCH_SIZE = 10;
+      const totalRows = dataLines.length;
+      const allCreatives: CreativeSpec[] = [];
+      let failures = 0;
+
+      for (let i = 0; i < dataLines.length; i += BATCH_SIZE) {
+        const batch = dataLines.slice(i, i + BATCH_SIZE);
+        const batchNum = Math.floor(i / BATCH_SIZE) + 1;
+        const totalBatches = Math.ceil(dataLines.length / BATCH_SIZE);
+        const from = i + 1;
+        const to = Math.min(i + batch.length, totalRows);
+
+        setProgress(`Lote ${batchNum}/${totalBatches} — filas ${from}-${to} de ${totalRows} (${allCreatives.length} generadas)`);
+
+        const batchText = `${fileContext ? fileContext + '\n' : ''}${headerLine}\n${batch.join('\n')}`;
+
+        try {
+          const specs = await extractAndOptimizePrompts(batchText);
+          specs.forEach((s, idx) => { s.id = `creative-${allCreatives.length + idx + 1}`; });
+          allCreatives.push(...specs);
+          setCreatives([...allCreatives]);
+        } catch (err: any) {
+          console.error(`Batch ${batchNum} failed:`, err);
+          failures++;
+          // Continue with next batch
+        }
+      }
+
+      setProgress('');
+      if (allCreatives.length === 0) {
+        throw new Error("No se generaron creatividades. Revisa el formato del archivo.");
+      }
+      if (failures > 0) {
+        setError(`Se completaron ${allCreatives.length} de ${totalRows} filas. ${failures} lotes fallaron.`);
+      }
     } catch (err: any) {
       setError(err.message || "Error al analizar las especificaciones.");
     } finally {
       setIsAnalyzing(false);
+      setProgress('');
     }
   };
 
@@ -228,7 +280,10 @@ ${data}`);
             <div className="h-full min-h-[500px] flex flex-col items-center justify-center text-stone-400 border-2 border-dashed border-stone-200 rounded-2xl bg-white">
               <Loader2 className="w-12 h-12 animate-spin text-green-600 mb-4" />
               <p className="text-lg font-bold text-stone-600">Analizando requerimientos y estructurando DCO...</p>
-              <p className="text-sm mt-1">Esto puede tomar unos segundos...</p>
+              <p className="text-sm mt-1 text-green-700 font-medium">{progress || 'Preparando...'}</p>
+              {creatives.length > 0 && (
+                <p className="text-sm mt-2 font-bold text-green-600">{creatives.length} creatividades generadas</p>
+              )}
             </div>
           ) : (
             <div className="space-y-6">

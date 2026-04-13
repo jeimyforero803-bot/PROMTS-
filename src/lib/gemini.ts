@@ -44,6 +44,12 @@ const PROMPT_PREFIX = `You are an Expert Prompt Engineer specializing in DCO (Dy
 
 The user uploaded a document (Excel/CSV) with creative specifications. You MUST read and understand EVERY column.
 
+STEP 0 — IDENTIFY THE BRAND:
+The BRAND is usually in the FILE NAME (shown as "[Nombre del archivo original: ...]") or in the TITLE/FIRST ROWS of the document.
+Examples: if filename says "Tarrito Rojo" → brand is "Tarrito Rojo". If it says "ETB_campaña" → brand is "ETB".
+"Zelva" or "Zelva Agencia Creativa" is the AGENCY, NEVER the brand. IGNORE it as brand.
+Use this identified brand for ALL creatives in identifiedBrand field.
+
 STEP 1 — READ THE CSV HEADER AND MAP EVERY COLUMN:
 The input is CSV data. The FIRST line is the header. Read it character by character to identify ALL columns.
 You MUST find and use these columns (names may vary slightly but look for them):
