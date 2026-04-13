@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
-    "build": "vite build",
+    "build": "echo 'Using pre-built dist — skip build'",
     "start": "node server.js",
-    "render-build": "echo GEMINI_API_KEY=$GEMINI_API_KEY > .env && npm run build",
+    "render-build": "echo 'Using pre-built dist — skip build'",
+    "build:local": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit"
