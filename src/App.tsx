@@ -146,18 +146,56 @@ export default function App() {
         const wsname = wb.SheetNames[0];
         const ws = wb.Sheets[wsname];
 
-        // Use sheet_to_json to get REAL rows (not broken CSV lines)
-        const allRows = XLSX.utils.sheet_to_json<Record<string, string>>(ws, { defval: '' });
+        // Find the REAL header row (the one with column names like MEDIO, CAMPAÑA, etc.)
+        // The Excel may have title rows above the actual data table
+        const rawRows = XLSX.utils.sheet_to_json<string[]>(ws, { header: 1, defval: '' });
 
-        // Filter: only rows where at least 3 columns have real content (not just row numbers)
-        const headers = Object.keys(allRows[0] || {});
-        const rows = allRows.filter(row => {
-          const filledCols = headers.filter(h => {
-            const val = String(row[h] || '').trim();
-            return val.length > 0 && val !== '0';
-          });
-          return filledCols.length >= 3;
+        // Detect header row: look for a row containing known keywords
+        const KNOWN_HEADERS = ['MEDIO', 'CAMPAÑA', 'OBJETIVO', 'AUDIENCIAS', 'CREATIVO', 'REFERENCIA', 'MES', 'FORMATO', 'PIEZAS'];
+        let headerRowIdx = -1;
+        for (let i = 0; i < Math.min(rawRows.length, 20); i++) {
+          const rowVals = rawRows[i].map(v => String(v || '').toUpperCase().trim());
+          const matches = KNOWN_HEADERS.filter(kw => rowVals.some(v => v.includes(kw)));
+          if (matches.length >= 3) {
+            headerRowIdx = i;
+            break;
+          }
+        }
+
+        if (headerRowIdx === -1) {
+          // Fallback: use first row with 5+ non-empty cells
+          for (let i = 0; i < Math.min(rawRows.length, 20); i++) {
+            const filled = rawRows[i].filter(v => String(v || '').trim().length > 0);
+            if (filled.length >= 5) {
+              headerRowIdx = i;
+              break;
+            }
+          }
+        }
+
+        if (headerRowIdx === -1) headerRowIdx = 0;
+
+        // Extract headers and data rows from the detected position
+        const headers = rawRows[headerRowIdx].map((h, i) => {
+          const val = String(h || '').trim();
+          return val || `COL_${i}`;
         });
+
+        const dataRows = rawRows.slice(headerRowIdx + 1);
+
+        // Convert to objects and filter rows with at least 3 filled columns
+        const rows = dataRows
+          .map(rawRow => {
+            const obj: Record<string, string> = {};
+            headers.forEach((h, i) => {
+              obj[h] = String(rawRow[i] || '').replace(/[\n\r]+/g, ' ').trim();
+            });
+            return obj;
+          })
+          .filter(row => {
+            const filled = headers.filter(h => row[h] && row[h].length > 0 && row[h] !== '0');
+            return filled.length >= 3;
+          });
 
         setExcelRows(rows);
         setFileName(file.name);
