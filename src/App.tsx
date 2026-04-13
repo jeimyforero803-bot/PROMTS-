@@ -193,8 +193,18 @@ export default function App() {
             return obj;
           })
           .filter(row => {
+            // Must have at least 3 filled columns
             const filled = headers.filter(h => row[h] && row[h].length > 0 && row[h] !== '0');
-            return filled.length >= 3;
+            if (filled.length < 3) return false;
+
+            // Must have at least ONE key column with a real value
+            const KEY_COLS = ['MEDIO', 'CAMPAÑA', 'OBJETIVO', 'CREATIVO', 'AUDIENCIAS'];
+            const hasKeyCol = headers.some(h => {
+              const hUp = h.toUpperCase().trim();
+              const isKey = KEY_COLS.some(k => hUp.includes(k));
+              return isKey && row[h] && row[h].trim().length > 0;
+            });
+            return hasKeyCol;
           });
 
         setExcelRows(rows);
