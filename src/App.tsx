@@ -242,13 +242,32 @@ ${data}`);
                         <Layers className="w-4 h-4 text-green-600" />
                         Estructura DCO & Copy (Fila #{index + 1})
                       </h3>
-                      
+
+                      {/* Platform & Format Pills */}
+                      <div className="flex flex-wrap gap-2">
+                        {creative.medio && (
+                          <span className="px-2.5 py-1 bg-blue-100 text-blue-700 text-[10px] font-bold rounded-full uppercase">{creative.medio}</span>
+                        )}
+                        {creative.formatoAnuncio && (
+                          <span className="px-2.5 py-1 bg-indigo-100 text-indigo-700 text-[10px] font-bold rounded-full">{creative.formatoAnuncio}</span>
+                        )}
+                        {creative.creativo && (
+                          <span className="px-2.5 py-1 bg-violet-100 text-violet-700 text-[10px] font-bold rounded-full">{creative.creativo}</span>
+                        )}
+                        {creative.objetivo && (
+                          <span className="px-2.5 py-1 bg-amber-100 text-amber-700 text-[10px] font-bold rounded-full">{creative.objetivo}</span>
+                        )}
+                        {creative.geografia && (
+                          <span className="px-2.5 py-1 bg-teal-100 text-teal-700 text-[10px] font-bold rounded-full">{creative.geografia}</span>
+                        )}
+                      </div>
+
                       <div className="grid grid-cols-2 gap-4">
                         {/* Identified Brand */}
                         <div className="bg-green-50/80 border border-green-100 p-3 rounded-xl relative group flex items-center gap-2">
                           <Tag className="w-4 h-4 text-green-600 shrink-0" />
                           <div className="min-w-0">
-                            <span className="text-[10px] font-bold text-green-600 uppercase tracking-wider block truncate">Marca Identificada</span>
+                            <span className="text-[10px] font-bold text-green-600 uppercase tracking-wider block truncate">Marca</span>
                             <span className="text-sm font-bold text-gray-900 truncate block">{creative.identifiedBrand}</span>
                           </div>
                         </div>
@@ -257,11 +276,37 @@ ${data}`);
                         <div className="bg-stone-50/80 border border-stone-200 p-3 rounded-xl relative group flex items-center gap-2">
                           <Crop className="w-4 h-4 text-stone-600 shrink-0" />
                           <div className="min-w-0">
-                            <span className="text-[10px] font-bold text-stone-600 uppercase tracking-wider block truncate">Formato y Tamaño</span>
+                            <span className="text-[10px] font-bold text-stone-600 uppercase tracking-wider block truncate">Tamaño</span>
                             <span className="text-sm font-bold text-gray-900 truncate block">{creative.formatAndSize}</span>
                           </div>
                         </div>
                       </div>
+
+                      {/* Audience & Driver */}
+                      {(creative.audienciaReferencia || creative.driverComunicacion) && (
+                        <div className="bg-cyan-50/80 border border-cyan-200 p-3 rounded-xl grid grid-cols-2 gap-3">
+                          {creative.audienciaReferencia && (
+                            <div>
+                              <span className="text-[10px] font-bold text-cyan-600 uppercase tracking-wider block">Audiencia Ref.</span>
+                              <span className="text-sm font-semibold text-gray-900">{creative.audienciaReferencia}</span>
+                            </div>
+                          )}
+                          {creative.driverComunicacion && (
+                            <div>
+                              <span className="text-[10px] font-bold text-cyan-600 uppercase tracking-wider block">Driver</span>
+                              <span className="text-sm font-semibold text-gray-900">{creative.driverComunicacion}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Text Spec from document */}
+                      {creative.textoSpec && (
+                        <div className="bg-yellow-50/60 border border-yellow-200 px-3 py-2 rounded-lg">
+                          <span className="text-[10px] font-bold text-yellow-700 uppercase tracking-wider">Spec Texto: </span>
+                          <span className="text-xs text-yellow-800 font-medium">{creative.textoSpec}</span>
+                        </div>
+                      )}
 
                       {/* Campaign Context */}
                       <div className="bg-stone-50 border border-stone-200 p-4 rounded-xl relative group">
@@ -277,20 +322,20 @@ ${data}`);
                           <span className="text-xs font-bold text-orange-600 uppercase tracking-wider flex items-center gap-1">
                             <Type className="w-3 h-3" /> Título Sugerido
                           </span>
-                          <span className={`text-xs font-bold ${creative.suggestedTitle.length > 30 ? 'text-red-500' : 'text-green-600'}`}>
-                            {creative.suggestedTitle.length}/30
+                          <span className={`text-xs font-bold ${creative.suggestedTitle.length > (creative.maxTitleChars || 40) ? 'text-red-500' : 'text-green-600'}`}>
+                            {creative.suggestedTitle.length}/{creative.maxTitleChars || 40}
                           </span>
                         </div>
                         <p className="text-sm text-gray-800 font-medium">{creative.suggestedTitle}</p>
                         <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
-                          <button 
+                          <button
                             onClick={() => setRegenConfig({ creativeId: creative.id, type: 'title', currentText: creative.suggestedTitle })}
                             className="p-1.5 bg-white rounded-md shadow-sm text-gray-500 hover:text-blue-600"
                             title="Regenerar con feedback"
                           >
                             <RefreshCw className="w-3.5 h-3.5" />
                           </button>
-                          <button 
+                          <button
                             onClick={() => copyToClipboard(creative.suggestedTitle, `${creative.id}-title`)}
                             className="p-1.5 bg-white rounded-md shadow-sm text-gray-500 hover:text-orange-600"
                             title="Copiar Título"
@@ -306,20 +351,20 @@ ${data}`);
                           <span className="text-xs font-bold text-orange-600 uppercase tracking-wider flex items-center gap-1">
                             <AlignLeft className="w-3 h-3" /> Texto Sugerido
                           </span>
-                          <span className={`text-xs font-bold ${creative.suggestedCopy.length > 90 ? 'text-red-500' : 'text-green-600'}`}>
-                            {creative.suggestedCopy.length}/90
+                          <span className={`text-xs font-bold ${creative.suggestedCopy.length > (creative.maxCopyChars || 200) ? 'text-red-500' : 'text-green-600'}`}>
+                            {creative.suggestedCopy.length}/{creative.maxCopyChars || 200}
                           </span>
                         </div>
                         <p className="text-sm text-gray-800">{creative.suggestedCopy}</p>
                         <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
-                          <button 
+                          <button
                             onClick={() => setRegenConfig({ creativeId: creative.id, type: 'copy', currentText: creative.suggestedCopy })}
                             className="p-1.5 bg-white rounded-md shadow-sm text-gray-500 hover:text-blue-600"
                             title="Regenerar con feedback"
                           >
                             <RefreshCw className="w-3.5 h-3.5" />
                           </button>
-                          <button 
+                          <button
                             onClick={() => copyToClipboard(creative.suggestedCopy, `${creative.id}-text`)}
                             className="p-1.5 bg-white rounded-md shadow-sm text-gray-500 hover:text-orange-600"
                             title="Copiar Texto"
