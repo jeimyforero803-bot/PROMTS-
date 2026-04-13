@@ -329,21 +329,19 @@ export default function App() {
               <p className="text-lg font-bold text-stone-600">No hay Prompts Maestros generados</p>
               <p className="text-sm mt-1">Sube el Excel con los requerimientos del cliente para comenzar</p>
             </div>
-          ) : isAnalyzing ? (
+          ) : creatives.length === 0 && isAnalyzing ? (
             <div className="h-full min-h-[500px] flex flex-col items-center justify-center text-stone-400 border-2 border-dashed border-stone-200 rounded-2xl bg-white">
               <Loader2 className="w-12 h-12 animate-spin text-green-600 mb-4" />
-              <p className="text-lg font-bold text-stone-600">Analizando requerimientos y estructurando DCO...</p>
-              <p className="text-sm mt-1 text-green-700 font-medium">{progress || 'Preparando...'}</p>
-              {creatives.length > 0 && (
-                <p className="text-sm mt-2 font-bold text-green-600">{creatives.length} creatividades generadas</p>
-              )}
+              <p className="text-lg font-bold text-stone-600">Iniciando generación...</p>
+              <p className="text-sm mt-1 text-green-700 font-medium">{progress || 'Preparando lotes...'}</p>
             </div>
           ) : (
             <div className="space-y-6">
-              {/* Export Button */}
+              {/* Top bar: count + export */}
               <div className="flex items-center justify-between bg-white rounded-xl p-4 border border-stone-200 shadow-sm">
                 <p className="text-sm font-bold text-gray-700">
                   {creatives.length} creatividades generadas
+                  {isAnalyzing && <span className="text-green-600 ml-2 font-medium">(generando más...)</span>}
                 </p>
                 <button
                   onClick={handleExportExcel}
@@ -613,6 +611,20 @@ export default function App() {
           )}
         </div>
       </main>
+
+      {/* Fixed progress bar at bottom while generating */}
+      {isAnalyzing && creatives.length > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 bg-stone-900 text-white px-6 py-3 z-40 shadow-lg border-t border-green-600">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Loader2 className="w-4 h-4 animate-spin text-green-400" />
+              <span className="text-sm font-medium">{progress}</span>
+            </div>
+            <span className="text-sm font-bold text-green-400">{creatives.length} generadas</span>
+          </div>
+        </div>
+      )}
+
       {/* Regenerate Modal */}
       {regenConfig && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
