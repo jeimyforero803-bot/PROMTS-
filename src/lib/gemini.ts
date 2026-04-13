@@ -1,6 +1,11 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const GEMINI_KEY = process.env.GEMINI_API_KEY || '';
+
+function getAI() {
+  if (!GEMINI_KEY) throw new Error('GEMINI_API_KEY no configurada. Contacta al administrador.');
+  return new GoogleGenAI({ apiKey: GEMINI_KEY });
+}
 
 export interface CreativeSpec {
   id: string;
@@ -25,7 +30,7 @@ export async function extractAndOptimizePrompts(inputText: string): Promise<Crea
       setTimeout(() => reject(new Error("La solicitud a la IA ha tardado demasiado (Timeout). Intenta con menos texto.")), 180000);
     });
 
-    const apiPromise = ai.models.generateContent({
+    const apiPromise = getAI().models.generateContent({
       model: "gemini-2.5-flash",
       contents: `You are an Expert Prompt Engineer specializing in DCO (Dynamic Creative Optimization), Copywriting, and Brand Consistency.
       
@@ -120,7 +125,7 @@ export async function regenerateCopy(
   const fieldName = fieldType === 'title' ? 'Title' : 'Copy';
 
   try {
-    const response = await ai.models.generateContent({
+    const response = await getAI().models.generateContent({
       model: "gemini-2.5-flash",
       contents: `You are an Expert Copywriter and Prompt Engineer specializing in DCO (Dynamic Creative Optimization).
       
