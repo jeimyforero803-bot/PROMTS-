@@ -460,21 +460,23 @@ export default function App() {
               )}
             </div>
 
-            <div className="relative mb-4">
-              <div className="absolute inset-0 flex items-center" aria-hidden="true">
-                <div className="w-full border-t border-stone-200" />
+            {/* Preview of loaded data */}
+            {inputText && (
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold text-green-700 uppercase tracking-wider flex items-center gap-1">
+                    <Check className="w-3 h-3" /> Datos cargados
+                  </span>
+                  <span className="text-xs text-stone-500">{excelRows.length} filas detectadas</span>
+                </div>
+                <textarea
+                  className="w-full h-24 p-3 bg-green-50/50 border border-green-200 rounded-xl text-xs text-gray-600 leading-relaxed resize-none font-mono"
+                  value={inputText}
+                  onChange={(e) => setInputText(e.target.value)}
+                  readOnly={excelRows.length > 0}
+                />
               </div>
-              <div className="relative flex justify-center">
-                <span className="bg-stone-50 px-3 text-xs font-bold text-stone-400 uppercase tracking-wider">O pega el contenido</span>
-              </div>
-            </div>
-
-            <textarea
-              className="w-full h-32 p-4 bg-white border border-stone-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all resize-none text-sm leading-relaxed"
-              placeholder="Pega datos tabulares directamente del Excel aquí..."
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-            />
+            )}
             
             {error && (
               <div className="mt-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm flex items-start gap-2 border border-red-100">
