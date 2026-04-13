@@ -21,46 +21,56 @@ export interface CreativeSpec {
 }
 
 export async function extractAndOptimizePrompts(inputText: string): Promise<CreativeSpec[]> {
-  // Truncate input to prevent massive payloads that can cause the model to hang
-  const truncatedInput = inputText.slice(0, 15000);
+  // Allow up to 60KB to support 50+ rows
+  const truncatedInput = inputText.slice(0, 60000);
 
   try {
-    // We use Promise.race to add a timeout just in case the API hangs, increased to 3 minutes for large requests
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error("La solicitud a la IA ha tardado demasiado (Timeout). Intenta con menos texto.")), 180000);
+      setTimeout(() => reject(new Error("La solicitud a la IA ha tardado demasiado (Timeout). Intenta con menos texto.")), 300000);
     });
 
     const apiPromise = getAI().models.generateContent({
       model: "gemini-2.5-flash",
       contents: `You are an Expert Prompt Engineer specializing in DCO (Dynamic Creative Optimization), Copywriting, and Brand Consistency.
-      
+
 The user has provided a document (parsed from Excel/CSV/Text) containing creative specifications from their client.
-Your goal is to generate a "Master Prompt" (Prompt Maestro) for each distinct request in the document, AND generate suggested copywriting based on the theme.
+Your PRIMARY goal is to generate a "Master Prompt" (Prompt Maestro) for each row that focuses on placing the TITLE and COPY text into the creative, along with suggested copywriting.
 
 CRITICAL RULES:
-1. "Zelva" (or Zelva Agencia Creativa) is the creative agency responsible for the request, IT IS NOT THE BRAND. Do not use Zelva as the brand in the copy or prompts.
-2. IDENTIFY THE ACTUAL BRAND: You must deduce the actual brand (e.g., "ETB", "Empresa de Telecomunicaciones de Bogotá", or any other company) from the document's title, headers, or content.
-3. Tailor the generated copy, tone, and visual guidelines specifically to the identified brand.
-4. You MUST generate the actual copy (Title and Text) based on the requested theme and the identified brand.
-5. FLAWLESS SPANISH & ORTHOGRAPHY: The native language is Spanish. You must ensure absolute perfection in spelling, grammar, and orthography. ZERO spelling mistakes are allowed in the generated copy, titles, or Spanish prompts. Pay maximum attention to accents (tildes) and punctuation.
-6. INTEGRATE COPY INTO MASTER PROMPT: You MUST explicitly integrate the generated "Suggested Title" and "Suggested Copy" inside the Master Prompt itself.
+1. "Zelva" (or Zelva Agencia Creativa) is the creative agency, IT IS NOT THE BRAND. Never use Zelva as the brand.
+2. IDENTIFY THE ACTUAL BRAND from the document's title, headers, or content (e.g., "ETB", "Colgate", "Samsung").
+3. FLAWLESS SPANISH & ORTHOGRAPHY: Zero spelling mistakes. Perfect accents (tildes) and punctuation.
+4. CHARACTER LIMITS ARE ABSOLUTE AND NON-NEGOTIABLE:
+   - suggestedTitle: MAXIMUM 30 characters including spaces. Count EVERY character. If it exceeds 30, shorten it.
+   - suggestedCopy: MAXIMUM 90 characters including spaces. Count EVERY character. If it exceeds 90, shorten it.
+   - BEFORE returning each title/copy, mentally count the characters. If over the limit, rewrite shorter.
+5. PROCESS EVERY ROW: You MUST process ALL rows in the input, up to 60 creatives. Do NOT skip rows. Do NOT stop at 14 or 20.
 
-For each distinct row/request in the input, generate a complete DCO Master Prompt package containing:
-1. Identified Brand: The actual brand name you identified for this request (e.g., "ETB").
-2. Format & Size: Extract the requested dimensions, aspect ratio, or format (e.g., "1080x1080", "16:9", "Story 1080x1920"). If not specified, suggest a standard digital format based on the context.
-3. Campaign Context: Brief summary of the campaign objective in Spanish based on the row data.
-4. Suggested Title: Create a catchy title in Spanish based on the theme and brand. STRICTLY maximum 30 characters including spaces. FLAWLESS ORTHOGRAPHY.
-5. Suggested Copy: Create compelling ad text in Spanish based on the theme and brand. STRICTLY maximum 90 characters including spaces. FLAWLESS ORTHOGRAPHY.
-6. Brand Guidelines & Layout: Extracted rules for colors, tone, and layout/safe zones. (In Spanish)
-7. Master Prompt (English): A SIMPLE, DIRECT, and INFALLIBLE prompt for an AI image generator. Overly complex prompts fail and cause text to be cut off. You MUST use this exact, simplified structure:
-   - [Medium & Subject]: e.g., "A high-quality commercial photograph of [subject]. [Brief scene description]."
-   - [ANTI-CROPPING & LAYOUT - CRITICAL]: You MUST explicitly include this exact phrase: "Zoomed out, wide margins, ensure all text and subjects are fully visible inside the canvas. No cropping, no cut-off text."
-   - [TEXT INTEGRATION - CRITICAL]: You MUST explicitly include the text using this simple phrasing: "Bold typography text says exactly '[Insert Title]', and smaller text says '[Insert Copy]'. The text is perfectly integrated, fully visible, and not cut off." (Include price in the text if applicable).
-   - [Brand Style]: "Use a color palette featuring [Brand Colors]."
-8. Master Prompt (Spanish): The exact translation of the Master Prompt, maintaining flawless Spanish orthography and grammar.
-9. Universal Resize/Outpainting Prompt (English): A highly effective, GENERAL "mini prompt" designed for outpainting tools (like Google Flow / Imagen 3). Do NOT make it specific to the current image's exact contents (e.g., do not mention specific people, desks, or objects). Instead, create a universal prompt that adapts ANY creative to ANY format. It MUST explicitly instruct the AI to: 1) Seamlessly extend the background. 2) STRICTLY preserve and NOT alter or distort any existing text, titles, copy, or prices. 3) Maintain the exact consistency, lighting, and style of the original image. Example: "Seamlessly extend the background to fit the new canvas size, maintaining the exact lighting, textures, and visual style of the original image. STRICTLY preserve all existing text, titles, copy, and prices without any alterations or distortions. Keep the main subjects completely untouched and preserve negative space."
+THE MASTER PROMPT MUST FOCUS ON TEXT PLACEMENT:
+The Master Prompt is for an AI image generator. Its primary job is to tell the AI WHERE and HOW to place the Title and Copy text onto a creative/ad visual. The prompt structure must be:
 
-IMPORTANT: Process all distinct requests in the input. Limit your response to a maximum of 20 creatives to avoid timeouts. Ignore empty rows or invalid data.
+ENGLISH Master Prompt structure:
+"Commercial advertisement for [Brand]. Clean, professional layout with [Brand colors/style].
+HEADLINE TEXT: Bold, prominent typography at the [top/center] that reads exactly: '[Suggested Title]'.
+BODY TEXT: Smaller supporting text that reads exactly: '[Suggested Copy]'.
+[If price exists]: Price displayed prominently: '[Price]'.
+Layout: Zoomed out, wide margins, all text fully visible inside the canvas. No cropping, no cut-off text.
+Color palette: [Brand colors]. [Format: dimensions]."
+
+SPANISH Master Prompt: Exact translation of the English version.
+
+For each row generate:
+1. identifiedBrand: The actual brand name.
+2. formatAndSize: Dimensions from the document (e.g., "1080x1080", "300x250"). If not specified, use "1080x1080".
+3. campaignContext: Brief campaign objective summary in Spanish.
+4. suggestedTitle: Catchy title in Spanish. STRICTLY ≤30 characters. COUNT THEM.
+5. suggestedCopy: Compelling ad text in Spanish. STRICTLY ≤90 characters. COUNT THEM.
+6. brandGuidelines: Colors, tone, layout rules in Spanish.
+7. masterPromptEn: English Master Prompt focused on text placement (structure above).
+8. masterPromptEs: Spanish Master Prompt (translation of above).
+9. resizePrompt: "Seamlessly extend the background to fit the new canvas size, maintaining exact lighting, textures, and visual style. STRICTLY preserve all existing text, titles, copy, and prices without alterations or distortions. Keep main subjects untouched and preserve negative space."
+
+IMPORTANT: Process ALL rows (up to 60). Do NOT stop early. Ignore empty rows or invalid data.
 
 Input specifications (Client Requirements):
 ${truncatedInput}
@@ -75,16 +85,16 @@ ${truncatedInput}
               items: {
                 type: Type.OBJECT,
                 properties: {
-                  id: { type: Type.STRING, description: "A unique identifier for this creative" },
-                  identifiedBrand: { type: Type.STRING, description: "The actual brand name identified from the document (e.g., ETB), ignoring 'Zelva' which is just the agency." },
-                  formatAndSize: { type: Type.STRING, description: "The specific format, dimensions, or aspect ratio (e.g., 1080x1080, 16:9, Story)" },
-                  campaignContext: { type: Type.STRING, description: "Brief summary of the campaign objective" },
-                  suggestedTitle: { type: Type.STRING, description: "Suggested title in Spanish, STRICTLY max 30 chars" },
-                  suggestedCopy: { type: Type.STRING, description: "Suggested ad text in Spanish, STRICTLY max 90 chars" },
-                  brandGuidelines: { type: Type.STRING, description: "Rules for colors, lighting, tone, and layout/safe zones" },
-                  masterPromptEn: { type: Type.STRING, description: "The comprehensive Master Prompt in English for the DCO AI" },
-                  masterPromptEs: { type: Type.STRING, description: "The comprehensive Master Prompt in Spanish for the DCO AI" },
-                  resizePrompt: { type: Type.STRING, description: "The outpainting/resize prompt in English for adapting to different formats." }
+                  id: { type: Type.STRING, description: "Unique identifier for this creative" },
+                  identifiedBrand: { type: Type.STRING, description: "The actual brand name (not Zelva)" },
+                  formatAndSize: { type: Type.STRING, description: "Dimensions (e.g., 1080x1080)" },
+                  campaignContext: { type: Type.STRING, description: "Campaign objective in Spanish" },
+                  suggestedTitle: { type: Type.STRING, description: "Title in Spanish, STRICTLY max 30 chars including spaces" },
+                  suggestedCopy: { type: Type.STRING, description: "Ad text in Spanish, STRICTLY max 90 chars including spaces" },
+                  brandGuidelines: { type: Type.STRING, description: "Colors, tone, layout rules" },
+                  masterPromptEn: { type: Type.STRING, description: "English prompt focused on text placement in the creative" },
+                  masterPromptEs: { type: Type.STRING, description: "Spanish prompt focused on text placement in the creative" },
+                  resizePrompt: { type: Type.STRING, description: "Universal outpainting/resize prompt" }
                 },
                 required: ["id", "identifiedBrand", "formatAndSize", "campaignContext", "suggestedTitle", "suggestedCopy", "brandGuidelines", "masterPromptEn", "masterPromptEs", "resizePrompt"]
               }
@@ -99,14 +109,23 @@ ${truncatedInput}
 
     const text = response.text;
     if (!text) throw new Error("La IA no devolvió ninguna respuesta.");
-    
-    // Clean up potential markdown formatting around JSON
+
     const cleanText = text.replace(/```json/gi, '').replace(/```/g, '').trim();
     const parsed = JSON.parse(cleanText);
-    
+
     if (!parsed.creatives || !Array.isArray(parsed.creatives)) {
       throw new Error("El formato de respuesta de la IA no es válido.");
     }
+
+    // Post-process: enforce character limits strictly
+    parsed.creatives.forEach((c: CreativeSpec) => {
+      if (c.suggestedTitle && c.suggestedTitle.length > 30) {
+        c.suggestedTitle = c.suggestedTitle.substring(0, 30).replace(/\s+\S*$/, '');
+      }
+      if (c.suggestedCopy && c.suggestedCopy.length > 90) {
+        c.suggestedCopy = c.suggestedCopy.substring(0, 90).replace(/\s+\S*$/, '');
+      }
+    });
 
     return parsed.creatives;
   } catch (error: any) {
@@ -128,10 +147,11 @@ export async function regenerateCopy(
     const response = await getAI().models.generateContent({
       model: "gemini-2.5-flash",
       contents: `You are an Expert Copywriter and Prompt Engineer specializing in DCO (Dynamic Creative Optimization).
-      
-Task: 
+
+Task:
 1. Regenerate the ad ${fieldName} based on the user's feedback.
-2. Update the Master Prompts to explicitly include this new ${fieldName} instead of the old one.
+2. Update the Master Prompts to explicitly include this new ${fieldName} text instead of the old one.
+3. The Master Prompt focuses on TEXT PLACEMENT — where and how to display the title and copy on the creative.
 
 Context:
 - Brand: ${creative.identifiedBrand}
@@ -142,10 +162,10 @@ Context:
 - User Feedback / Instructions: "${feedback}"
 
 CRITICAL RULES:
-1. FLAWLESS SPANISH & ORTHOGRAPHY: The output text must be in perfect Spanish with zero spelling mistakes, correct accents (tildes), and punctuation.
-2. STRICT CHARACTER LIMIT: Maximum ${charLimit} characters including spaces for the new text.
-3. Tailor the tone and message specifically to the user's feedback and the brand.
-4. Replace the old ${fieldName} with the new ${fieldName} in both Master Prompts, keeping the rest of the prompt instructions intact.
+1. FLAWLESS SPANISH & ORTHOGRAPHY: Zero spelling mistakes, correct accents (tildes), punctuation.
+2. STRICT CHARACTER LIMIT: Maximum ${charLimit} characters including spaces. COUNT EVERY CHARACTER before returning. If over the limit, rewrite shorter.
+3. Tailor the tone and message to the user's feedback and the brand.
+4. Replace the old ${fieldName} text in both Master Prompts with the new one.
 
 Return the newly generated text AND the updated master prompts.`,
       config: {
@@ -154,8 +174,8 @@ Return the newly generated text AND the updated master prompts.`,
           type: Type.OBJECT,
           properties: {
             newText: { type: Type.STRING, description: `The regenerated text in Spanish, strictly max ${charLimit} chars.` },
-            updatedMasterPromptEn: { type: Type.STRING, description: "The updated Master Prompt in English containing the new text." },
-            updatedMasterPromptEs: { type: Type.STRING, description: "The updated Master Prompt in Spanish containing the new text." }
+            updatedMasterPromptEn: { type: Type.STRING, description: "The updated Master Prompt in English with new text." },
+            updatedMasterPromptEs: { type: Type.STRING, description: "The updated Master Prompt in Spanish with new text." }
           },
           required: ["newText", "updatedMasterPromptEn", "updatedMasterPromptEs"]
         }
@@ -164,12 +184,18 @@ Return the newly generated text AND the updated master prompts.`,
 
     const text = response.text;
     if (!text) throw new Error("La IA no devolvió ninguna respuesta.");
-    
+
     const cleanText = text.replace(/```json/gi, '').replace(/```/g, '').trim();
     const parsed = JSON.parse(cleanText);
-    
+
+    // Enforce char limit on regenerated text
+    let newText = parsed.newText || '';
+    if (newText.length > charLimit) {
+      newText = newText.substring(0, charLimit).replace(/\s+\S*$/, '');
+    }
+
     return {
-      newText: parsed.newText,
+      newText,
       updatedMasterPromptEn: parsed.updatedMasterPromptEn,
       updatedMasterPromptEs: parsed.updatedMasterPromptEs
     };
