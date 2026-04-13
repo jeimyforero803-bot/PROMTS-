@@ -1,0 +1,5 @@
+{
+  "name": "Mixboard Prompt Generator",
+  "description": "Generador de prompts para crear variantes de anuncios en Google Mixboard",
+  "requestFramePermissions": []
+}
