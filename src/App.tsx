@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { extractAndOptimizePrompts, regenerateCopy, CreativeSpec } from './lib/gemini';
-import { Loader2, Upload, FileText, Sparkles, AlertCircle, Copy, Check, Layers, Palette, Type, AlignLeft, Tag, Crop, RefreshCw, X, MessageSquare } from 'lucide-react';
+import { Loader2, Upload, FileText, Sparkles, AlertCircle, Copy, Check, Layers, Palette, Type, AlignLeft, Tag, Crop, RefreshCw, X, MessageSquare, Download } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 export default function App() {
@@ -26,6 +26,34 @@ export default function App() {
   const [isRegenerating, setIsRegenerating] = useState(false);
 
   const [progress, setProgress] = useState('');
+
+  const handleExportExcel = () => {
+    if (creatives.length === 0) return;
+
+    // Build rows: original Excel data + generated columns
+    const exportRows = creatives.map((c, i) => {
+      // Start with original row data if available
+      const original = excelRows[i] ? { ...excelRows[i] } : {};
+      return {
+        ...original,
+        'TÍTULO GENERADO': c.suggestedTitle,
+        'COPY GENERADO': c.suggestedCopy,
+        'AUDIENCIA MACRO': c.audienciaMacro,
+        'MICRO ELEGIDA': c.audienciaReferenciaElegida,
+        'DRIVER': c.driverComunicacion,
+        'PROMPT MAESTRO (EN)': `take as a reference this creative and generate 5 different variants with this image. respect the logo 100% faithful and the identity of the brand ${c.identifiedBrand}. change the background environment and the character to: ${c.campaignContext}. take the same font and Include the exact text '${c.suggestedTitle}' and '${c.suggestedCopy}' ensuring flawless spelling. be faithful to the initial logo and the graphic lines.`,
+        'PROMPT MAESTRO (ES)': `toma como referencia esta pieza creativa y genera 5 variantes diferentes con esta imagen. respeta el logo 100% fiel y la identidad de la marca ${c.identifiedBrand}. cambia el entorno del fondo y el personaje a: ${c.campaignContext}. usa la misma tipografía e incluye el texto exacto '${c.suggestedTitle}' y '${c.suggestedCopy}' asegurando ortografía impecable. sé fiel al logo inicial y a las líneas gráficas.`,
+        'PROMPT RESIZE': c.resizePrompt,
+      };
+    });
+
+    const ws = XLSX.utils.json_to_sheet(exportRows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Creatividades');
+
+    const exportName = fileName ? fileName.replace(/\.[^.]+$/, '') + '_PROMTS.xlsx' : 'creatividades_PROMTS.xlsx';
+    XLSX.writeFile(wb, exportName);
+  };
 
   const handleAnalyze = async () => {
     if (!inputText.trim()) return;
@@ -312,6 +340,19 @@ export default function App() {
             </div>
           ) : (
             <div className="space-y-6">
+              {/* Export Button */}
+              <div className="flex items-center justify-between bg-white rounded-xl p-4 border border-stone-200 shadow-sm">
+                <p className="text-sm font-bold text-gray-700">
+                  {creatives.length} creatividades generadas
+                </p>
+                <button
+                  onClick={handleExportExcel}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-700 hover:bg-green-800 text-white font-bold rounded-lg text-sm transition-colors shadow-sm"
+                >
+                  <Download className="w-4 h-4" />
+                  Exportar Excel
+                </button>
+              </div>
               {creatives.map((creative, index) => (
                 <div key={creative.id} className="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden flex flex-col p-6 transition-all hover:shadow-md">
                   
