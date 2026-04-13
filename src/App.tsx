@@ -345,45 +345,70 @@ ${data}`);
                         Prompt Maestro (Master Prompt)
                       </h3>
 
-                      {/* English Prompt */}
-                      <div className="flex flex-col h-[180px]">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="text-xs font-bold text-stone-600 uppercase tracking-wider">Inglés (Para la IA)</h4>
-                          <button 
-                            onClick={() => copyToClipboard(creative.masterPromptEn, `${creative.id}-en`)}
-                            className="flex items-center gap-1 px-2 py-1 bg-stone-50 hover:bg-green-50 text-stone-600 hover:text-green-600 rounded text-[10px] font-bold transition-colors border border-stone-200 hover:border-green-200"
-                          >
-                            {copiedId === `${creative.id}-en` ? (
-                              <><Check className="w-3 h-3 text-green-600" /> Copiado</>
-                            ) : (
-                              <><Copy className="w-3 h-3" /> Copiar</>
-                            )}
-                          </button>
-                        </div>
-                        <div className="bg-stone-50/50 border border-stone-200 p-4 rounded-xl text-xs text-gray-700 leading-relaxed flex-1 font-mono overflow-y-auto whitespace-pre-wrap">
-                          {creative.masterPromptEn}
-                        </div>
-                      </div>
+                      {/* Filled Template Prompt */}
+                      {(() => {
+                        const filledEn = `take as a reference this creative and generate 5 different variants with this image. respect the logo 100% faithful and the identity of the brand ${creative.identifiedBrand}. change the background environment and the character to: ${creative.campaignContext}. take the same font and Include the exact text '${creative.suggestedTitle}' and '${creative.suggestedCopy}' ensuring flawless spelling. be faithful to the initial logo and the graphic lines.`;
+                        const filledEs = `toma como referencia esta pieza creativa y genera 5 variantes diferentes con esta imagen. respeta el logo 100% fiel y la identidad de la marca ${creative.identifiedBrand}. cambia el entorno del fondo y el personaje a: ${creative.campaignContext}. usa la misma tipografía e incluye el texto exacto '${creative.suggestedTitle}' y '${creative.suggestedCopy}' asegurando ortografía impecable. sé fiel al logo inicial y a las líneas gráficas.`;
+                        return (
+                          <>
+                            {/* English Filled */}
+                            <div className="flex flex-col">
+                              <div className="flex items-center justify-between mb-2">
+                                <h4 className="text-xs font-bold text-stone-600 uppercase tracking-wider">Inglés (Para la IA)</h4>
+                                <button
+                                  onClick={() => copyToClipboard(filledEn, `${creative.id}-en`)}
+                                  className="flex items-center gap-1 px-2 py-1 bg-stone-50 hover:bg-green-50 text-stone-600 hover:text-green-600 rounded text-[10px] font-bold transition-colors border border-stone-200 hover:border-green-200"
+                                >
+                                  {copiedId === `${creative.id}-en` ? (
+                                    <><Check className="w-3 h-3 text-green-600" /> Copiado</>
+                                  ) : (
+                                    <><Copy className="w-3 h-3" /> Copiar</>
+                                  )}
+                                </button>
+                              </div>
+                              <div className="bg-stone-900 border border-stone-700 p-4 rounded-xl text-xs text-stone-300 leading-relaxed font-mono whitespace-pre-wrap">
+                                <span className="text-stone-400">take as a reference this creative and generate 5 different variants with this image. respect the logo 100% faithful and the identity of the brand </span>
+                                <span className="text-green-400 font-bold">{creative.identifiedBrand}</span>
+                                <span className="text-stone-400">. change the background environment and the character to: </span>
+                                <span className="text-green-400 font-bold">{creative.campaignContext}</span>
+                                <span className="text-stone-400">. take the same font and Include the exact text '</span>
+                                <span className="text-orange-400 font-bold">{creative.suggestedTitle}</span>
+                                <span className="text-stone-400">' and '</span>
+                                <span className="text-orange-400 font-bold">{creative.suggestedCopy}</span>
+                                <span className="text-stone-400">' ensuring flawless spelling. be faithful to the initial logo and the graphic lines.</span>
+                              </div>
+                            </div>
 
-                      {/* Spanish Prompt */}
-                      <div className="flex flex-col h-[180px]">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="text-xs font-bold text-stone-600 uppercase tracking-wider">Español (Referencia)</h4>
-                          <button 
-                            onClick={() => copyToClipboard(creative.masterPromptEs, `${creative.id}-es`)}
-                            className="flex items-center gap-1 px-2 py-1 bg-stone-50 hover:bg-green-50 text-stone-600 hover:text-green-600 rounded text-[10px] font-bold transition-colors border border-stone-200 hover:border-green-200"
-                          >
-                            {copiedId === `${creative.id}-es` ? (
-                              <><Check className="w-3 h-3 text-green-600" /> Copiado</>
-                            ) : (
-                              <><Copy className="w-3 h-3" /> Copiar</>
-                            )}
-                          </button>
-                        </div>
-                        <div className="bg-stone-50/50 border border-stone-200 p-4 rounded-xl text-xs text-gray-700 leading-relaxed flex-1 font-mono overflow-y-auto whitespace-pre-wrap">
-                          {creative.masterPromptEs}
-                        </div>
-                      </div>
+                            {/* Spanish Filled */}
+                            <div className="flex flex-col">
+                              <div className="flex items-center justify-between mb-2">
+                                <h4 className="text-xs font-bold text-stone-600 uppercase tracking-wider">Español (Referencia)</h4>
+                                <button
+                                  onClick={() => copyToClipboard(filledEs, `${creative.id}-es`)}
+                                  className="flex items-center gap-1 px-2 py-1 bg-stone-50 hover:bg-green-50 text-stone-600 hover:text-green-600 rounded text-[10px] font-bold transition-colors border border-stone-200 hover:border-green-200"
+                                >
+                                  {copiedId === `${creative.id}-es` ? (
+                                    <><Check className="w-3 h-3 text-green-600" /> Copiado</>
+                                  ) : (
+                                    <><Copy className="w-3 h-3" /> Copiar</>
+                                  )}
+                                </button>
+                              </div>
+                              <div className="bg-stone-900 border border-stone-700 p-4 rounded-xl text-xs text-stone-300 leading-relaxed font-mono whitespace-pre-wrap">
+                                <span className="text-stone-400">toma como referencia esta pieza creativa y genera 5 variantes diferentes con esta imagen. respeta el logo 100% fiel y la identidad de la marca </span>
+                                <span className="text-green-400 font-bold">{creative.identifiedBrand}</span>
+                                <span className="text-stone-400">. cambia el entorno del fondo y el personaje a: </span>
+                                <span className="text-green-400 font-bold">{creative.campaignContext}</span>
+                                <span className="text-stone-400">. usa la misma tipografía e incluye el texto exacto '</span>
+                                <span className="text-orange-400 font-bold">{creative.suggestedTitle}</span>
+                                <span className="text-stone-400">' y '</span>
+                                <span className="text-orange-400 font-bold">{creative.suggestedCopy}</span>
+                                <span className="text-stone-400">' asegurando ortografía impecable. sé fiel al logo inicial y a las líneas gráficas.</span>
+                              </div>
+                            </div>
+                          </>
+                        );
+                      })()}
 
                       {/* Resize Prompt */}
                       <div className="flex flex-col h-[140px]">
