@@ -282,13 +282,21 @@ ${data}`);
                         </div>
                       </div>
 
-                      {/* Audience & Driver */}
-                      {(creative.audienciaReferencia || creative.driverComunicacion) && (
-                        <div className="bg-cyan-50/80 border border-cyan-200 p-3 rounded-xl grid grid-cols-2 gap-3">
+                      {/* Audience Macro + Micro */}
+                      {(creative.audienciaMacro || creative.audienciaReferenciaElegida) && (
+                        <div className="bg-cyan-50/80 border border-cyan-200 p-3 rounded-xl space-y-2">
+                          <div className="flex items-center gap-2">
+                            {creative.audienciaMacro && (
+                              <span className="px-2.5 py-1 bg-cyan-600 text-white text-[10px] font-bold rounded-full uppercase">{creative.audienciaMacro}</span>
+                            )}
+                            {creative.audienciaReferenciaElegida && (
+                              <span className="px-2.5 py-1 bg-orange-500 text-white text-[10px] font-bold rounded-full">{creative.audienciaReferenciaElegida}</span>
+                            )}
+                          </div>
                           {creative.audienciaReferencia && (
                             <div>
-                              <span className="text-[10px] font-bold text-cyan-600 uppercase tracking-wider block">Audiencia Ref.</span>
-                              <span className="text-sm font-semibold text-gray-900">{creative.audienciaReferencia}</span>
+                              <span className="text-[10px] font-bold text-cyan-600 uppercase tracking-wider block">Micros disponibles:</span>
+                              <span className="text-xs text-gray-600">{creative.audienciaReferencia}</span>
                             </div>
                           )}
                           {creative.driverComunicacion && (

@@ -23,7 +23,9 @@ export interface CreativeSpec {
   maxCopyChars: number;
   objetivo: string;
   geografia: string;
+  audienciaMacro: string;
   audienciaReferencia: string;
+  audienciaReferenciaElegida: string;
   driverComunicacion: string;
   campaignContext: string;
   suggestedTitle: string;
@@ -64,23 +66,46 @@ Read the header row carefully. Common columns include (names may vary):
   * If it says "Título: max 25 Caracteres" only → maxTitleChars = 25, maxCopyChars = 90
 - OBJETIVO: Campaign objective (Awareness, Conversión, Tráfico, etc.)
 - GEOGRAFIA: Geographic targeting (Nacional, Regional, Ciudad, etc.)
-- Audiencia / Audiencia Referencia: Target audience or reference audience (if present)
+- AUDIENCIAS: The MACRO audience segment (e.g., "Generación Energía", "Motores del Día a Día", "Los comprometidos", "Vitalidad Clásica"). This is the broad target group.
+- AUDIENCIAS REFERENCIA: The MICRO audience profiles within each macro, separated by commas (e.g., "La guerrera del gimnasio, La influencer Wellness, el papá proveedor consciente."). These are specific personas used to build the creative concept.
 - Driver / Driver de Comunicación: Communication driver or key message angle (if present)
 
-STEP 2 — FOR EACH ROW, EXTRACT ALL COLUMN VALUES:
-Map every column value into the output fields. Do NOT invent data — use what the document provides.
+STEP 2 — MACRO vs MICRO AUDIENCE LOGIC (CRITICAL):
+The document has TWO audience columns:
+- AUDIENCIAS = MACRO (broad segment). Example: "Generación Energía"
+- AUDIENCIAS REFERENCIA = MICRO (specific personas within the macro, comma-separated). Example: "La guerrera del gimnasio, La influencer Wellness, el papá proveedor consciente."
+
+For EACH row, you MUST:
+a) Read the MACRO audience from the AUDIENCIAS column → put it in "audienciaMacro"
+b) Read ALL the MICRO personas from AUDIENCIAS REFERENCIA → put the full list in "audienciaReferencia"
+c) CHOOSE ONE specific micro persona for this creative → put it in "audienciaReferenciaElegida"
+d) The suggestedTitle and suggestedCopy MUST be crafted specifically for that chosen micro persona
+e) DISTRIBUTE micro personas across rows: if there are 9 rows for "Generación Energía" with 3 micros ("La guerrera del gimnasio, La influencer Wellness, el papá proveedor consciente"), assign ~3 rows to each micro persona. ROTATE them.
+f) The campaignContext MUST clearly state: "Audiencia: [MACRO] | Para: [MICRO elegida] | Objetivo: [OBJETIVO]"
+
+Example:
+- Row 1: audienciaMacro="Generación Energía", audienciaReferenciaElegida="La guerrera del gimnasio" → copy speaks to gym warriors
+- Row 2: audienciaMacro="Generación Energía", audienciaReferenciaElegida="La influencer Wellness" → copy speaks to wellness influencers
+- Row 3: audienciaMacro="Generación Energía", audienciaReferenciaElegida="El papá proveedor consciente" → copy speaks to conscious provider dads
+- Row 4: rotate back to "La guerrera del gimnasio" with a DIFFERENT angle/format
 
 STEP 3 — GENERATE COPY RESPECTING THE EXACT CHARACTER LIMITS FROM THE "Texto" COLUMN:
 - READ the "Texto" column for each row. It tells you the max characters.
 - If it says "200 Caracteres", your suggestedCopy MUST be ≤200 characters.
 - If it says "Título: max 25", your suggestedTitle MUST be ≤25 characters.
 - ALWAYS count characters before returning. If over the limit, rewrite shorter.
-- The copy must be tailored to the platform (MEDIO), audience, and driver.
+- The copy must be tailored to the platform (MEDIO), the chosen MICRO audience, and driver.
 
-STEP 4 — AUDIENCE & DRIVER STRATEGY:
-- If columns for "Audiencia Referencia" or "Driver" exist, use them to craft unique copy per audience segment.
-- Different audiences MUST get different messaging angles.
-- The campaignContext should summarize: Audience + Driver + Objective.
+STEP 4 — AUDIENCE-SPECIFIC COPY STRATEGY:
+- Each MICRO persona has a unique worldview. Speak to THEIR specific reality:
+  * "La guerrera del gimnasio" → energy, performance, pushing limits, pre-workout, gains
+  * "La influencer Wellness" → self-care, mindful living, clean ingredients, aesthetic
+  * "El papá proveedor consciente" → family health, responsible choices, value for money
+  * "El trabajador de construcción" → stamina, hard work, affordable energy, recovery
+  * "La profesora comprometida" → dedication, mental clarity, juggling responsibilities
+  * "El abuelo vital" → active aging, vitality, enjoying life, independence
+- The title and copy must feel like it was written BY someone who understands that specific persona.
+- NEVER use the same copy for different micro personas even if they share a macro audience.
 
 STEP 5 — DISRUPTIVE, NON-GENERIC COPY:
 Your copy MUST be DISRUPTIVE, CREATIVE, and SPECIFIC. You are saving the creative team hours of brainstorming.
@@ -130,9 +155,11 @@ For each row return:
 - maxCopyChars: extracted max copy characters from "Texto" column (number only)
 - objetivo: from "OBJETIVO" column
 - geografia: from "GEOGRAFIA" column
-- audienciaReferencia: from audience column if exists, otherwise ""
+- audienciaMacro: from AUDIENCIAS column (the macro segment)
+- audienciaReferencia: full comma-separated list from AUDIENCIAS REFERENCIA column
+- audienciaReferenciaElegida: the ONE specific micro persona you chose for THIS row's creative
 - driverComunicacion: from driver column if exists, otherwise ""
-- campaignContext: Spanish summary of audience + driver + objective
+- campaignContext: "Audiencia: [MACRO] | Para: [MICRO elegida] | Objetivo: [OBJETIVO]"
 - suggestedTitle: in Spanish, respecting maxTitleChars limit. COUNT CHARACTERS.
 - suggestedCopy: in Spanish, respecting maxCopyChars limit. COUNT CHARACTERS.
 - brandGuidelines: colors, tone, composition rules in Spanish
@@ -168,7 +195,9 @@ ${truncatedInput}
                   maxCopyChars: { type: Type.NUMBER, description: "Max copy characters extracted from Texto column" },
                   objetivo: { type: Type.STRING, description: "Campaign objective" },
                   geografia: { type: Type.STRING, description: "Geographic targeting" },
-                  audienciaReferencia: { type: Type.STRING, description: "Reference audience if present" },
+                  audienciaMacro: { type: Type.STRING, description: "MACRO audience from AUDIENCIAS column (e.g., Generación Energía)" },
+                  audienciaReferencia: { type: Type.STRING, description: "Full list of micro personas from AUDIENCIAS REFERENCIA column" },
+                  audienciaReferenciaElegida: { type: Type.STRING, description: "The ONE specific micro persona chosen for THIS creative (e.g., La guerrera del gimnasio)" },
                   driverComunicacion: { type: Type.STRING, description: "Communication driver if present" },
                   campaignContext: { type: Type.STRING },
                   suggestedTitle: { type: Type.STRING, description: "Title respecting maxTitleChars" },
@@ -178,7 +207,7 @@ ${truncatedInput}
                   masterPromptEs: { type: Type.STRING },
                   resizePrompt: { type: Type.STRING }
                 },
-                required: ["id", "identifiedBrand", "medio", "formatoAnuncio", "creativo", "formatAndSize", "formato", "peso", "textoSpec", "maxTitleChars", "maxCopyChars", "objetivo", "geografia", "campaignContext", "suggestedTitle", "suggestedCopy", "brandGuidelines", "masterPromptEn", "masterPromptEs", "resizePrompt"]
+                required: ["id", "identifiedBrand", "medio", "formatoAnuncio", "creativo", "formatAndSize", "formato", "peso", "textoSpec", "maxTitleChars", "maxCopyChars", "objetivo", "geografia", "audienciaMacro", "audienciaReferencia", "audienciaReferenciaElegida", "campaignContext", "suggestedTitle", "suggestedCopy", "brandGuidelines", "masterPromptEn", "masterPromptEs", "resizePrompt"]
               }
             }
           },
@@ -231,7 +260,9 @@ ${truncatedInput}
       c.maxCopyChars = copyMax;
       c.objetivo = c.objetivo || '';
       c.geografia = c.geografia || '';
+      c.audienciaMacro = c.audienciaMacro || '';
       c.audienciaReferencia = c.audienciaReferencia || '';
+      c.audienciaReferenciaElegida = c.audienciaReferenciaElegida || '';
       c.driverComunicacion = c.driverComunicacion || '';
     });
 
