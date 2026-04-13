@@ -5,10 +5,13 @@ import {defineConfig, loadEnv} from 'vite';
 
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
+  const geminiKey = env.GEMINI_API_KEY || process.env.GEMINI_API_KEY || '';
+  console.log(`[vite-build] GEMINI_API_KEY present: ${geminiKey ? 'YES (' + geminiKey.substring(0,8) + '...)' : 'NO'}`);
+  console.log(`[vite-build] loadEnv key: ${env.GEMINI_API_KEY ? 'YES' : 'NO'}, process.env key: ${process.env.GEMINI_API_KEY ? 'YES' : 'NO'}`);
   return {
     plugins: [react(), tailwindcss()],
     define: {
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY || process.env.GEMINI_API_KEY || ''),
+      'process.env.GEMINI_API_KEY': JSON.stringify(geminiKey),
     },
     resolve: {
       alias: {
