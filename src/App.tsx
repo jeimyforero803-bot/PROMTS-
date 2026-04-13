@@ -23,67 +23,18 @@ export default function App() {
   const [regenFeedback, setRegenFeedback] = useState('');
   const [isRegenerating, setIsRegenerating] = useState(false);
 
-  const [progress, setProgress] = useState('');
-
   const handleAnalyze = async () => {
     if (!inputText.trim()) return;
 
     setIsAnalyzing(true);
     setError(null);
-    setCreatives([]);
-
     try {
-      // Split CSV into header + data rows
-      const lines = inputText.split('\n');
-      const headerLine = lines.find(l => l.trim().length > 0) || '';
-      const dataLines = lines.slice(lines.indexOf(headerLine) + 1).filter(l => l.trim().length > 0);
-
-      // Extract file name prefix if present
-      const filePrefix = lines[0]?.startsWith('[Nombre') ? lines[0] + '\n\n' : '';
-
-      const BATCH_SIZE = 50;
-      const totalRows = dataLines.length;
-      const batches: string[][] = [];
-
-      for (let i = 0; i < dataLines.length; i += BATCH_SIZE) {
-        batches.push(dataLines.slice(i, i + BATCH_SIZE));
-      }
-
-      const allCreatives: CreativeSpec[] = [];
-
-      for (let batchIdx = 0; batchIdx < batches.length; batchIdx++) {
-        const batch = batches[batchIdx];
-        const startRow = batchIdx * BATCH_SIZE + 1;
-        const endRow = Math.min(startRow + batch.length - 1, totalRows);
-
-        setProgress(`Procesando lote ${batchIdx + 1}/${batches.length} (filas ${startRow}-${endRow} de ${totalRows})...`);
-
-        // Always send header + this batch's rows
-        const batchText = `${filePrefix}${headerLine}\n${batch.join('\n')}`;
-
-        try {
-          const specs = await extractAndOptimizePrompts(batchText);
-          // Re-number IDs to be globally unique
-          specs.forEach((s, i) => { s.id = `creative-${allCreatives.length + i + 1}`; });
-          allCreatives.push(...specs);
-          setCreatives([...allCreatives]);
-        } catch (batchErr: any) {
-          console.error(`Batch ${batchIdx + 1} failed:`, batchErr);
-          // Continue with other batches
-          if (batches.length === 1) throw batchErr;
-        }
-      }
-
-      if (allCreatives.length === 0) {
-        throw new Error("No se generaron creatividades. Revisa el formato del archivo.");
-      }
-
-      setProgress('');
+      const specs = await extractAndOptimizePrompts(inputText);
+      setCreatives(specs);
     } catch (err: any) {
       setError(err.message || "Error al analizar las especificaciones.");
     } finally {
       setIsAnalyzing(false);
-      setProgress('');
     }
   };
 
@@ -277,10 +228,7 @@ ${data}`);
             <div className="h-full min-h-[500px] flex flex-col items-center justify-center text-stone-400 border-2 border-dashed border-stone-200 rounded-2xl bg-white">
               <Loader2 className="w-12 h-12 animate-spin text-green-600 mb-4" />
               <p className="text-lg font-bold text-stone-600">Analizando requerimientos y estructurando DCO...</p>
-              <p className="text-sm mt-1">{progress || 'Preparando...'}</p>
-              {creatives.length > 0 && (
-                <p className="text-sm mt-2 text-green-600 font-bold">{creatives.length} creatividades generadas hasta ahora</p>
-              )}
+              <p className="text-sm mt-1">Esto puede tomar unos segundos...</p>
             </div>
           ) : (
             <div className="space-y-6">
