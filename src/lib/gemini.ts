@@ -50,25 +50,28 @@ export async function extractAndOptimizePrompts(inputText: string): Promise<Crea
 
 The user uploaded a document (Excel/CSV) with creative specifications. You MUST read and understand EVERY column.
 
-STEP 1 — UNDERSTAND THE COLUMNS:
-Read the header row carefully. Common columns include (names may vary):
-- MEDIO: Platform (META, DV360, TIKTOK, YOUTUBE, GOOGLE, etc.)
-- Formato de Anuncio: Ad format (Link Ad, Link Ad Video, Stories, Banners tradicionales, Native Ads, Infeed, Trueview, Shorts, etc.)
-- Creativo: Creative type (Imagen, Video, Estandar, etc.)
-- Tamaño (en pixeles): Dimensions (1080x1080, 1920x1080, 300x250, 728x90, 1200x627, etc.)
-- Formato: File format (JPG, PNG, MP4, MOV, GIF, HTML5, etc.)
-- Peso: File weight limit (80KB, <2.3GB, 40KB, 100k, etc.)
-- Texto: CHARACTER LIMITS — THIS IS CRITICAL. Read exactly what it says. Examples:
-  * "Texto: 200 Caracteres" → maxCopyChars = 200
-  * "Título: max 25 Caracteres" → maxTitleChars = 25
-  * "de la cuenta: máximo 20 / del anuncio: 100 caracteres" → maxTitleChars = 20, maxCopyChars = 100
-  * If it says just "Texto: 200 Caracteres" with no title spec → maxTitleChars = 40, maxCopyChars = 200
-  * If it says "Título: max 25 Caracteres" only → maxTitleChars = 25, maxCopyChars = 90
-- OBJETIVO: Campaign objective (Awareness, Conversión, Tráfico, etc.)
-- GEOGRAFIA: Geographic targeting (Nacional, Regional, Ciudad, etc.)
-- AUDIENCIAS: The MACRO audience segment (e.g., "Generación Energía", "Motores del Día a Día", "Los comprometidos", "Vitalidad Clásica"). This is the broad target group.
-- AUDIENCIAS REFERENCIA: The MICRO audience profiles within each macro, separated by commas (e.g., "La guerrera del gimnasio, La influencer Wellness, el papá proveedor consciente."). These are specific personas used to build the creative concept.
-- Driver / Driver de Comunicación: Communication driver or key message angle (if present)
+STEP 1 — READ THE CSV HEADER AND MAP EVERY COLUMN:
+The input is CSV data. The FIRST line is the header. Read it character by character to identify ALL columns.
+You MUST find and use these columns (names may vary slightly but look for them):
+- MEDIO → Platform (META, DV360, TIKTOK, YOUTUBE, GOOGLE)
+- Formato de Anuncio → Ad format (Link Ad, Stories, Banners, Native Ads, Infeed, Trueview, Shorts)
+- Creativo → Creative type (Imagen, Video, Estandar, Cápsulas Hero)
+- Tamaño (en pixeles) → Dimensions (1080x1080, 1920x1080, 300x250, 728x90, 1200x627)
+- Formato → File format (JPG, PNG, MP4, MOV, GIF, HTML5)
+- Peso → File weight limit (80KB, <2.3GB, 40KB, 100k)
+- Texto → CHARACTER LIMITS. Read the cell value:
+  * "Texto: 200 Caracteres" → maxCopyChars=200, maxTitleChars=40
+  * "Título: max 25 Caracteres" → maxTitleChars=25, maxCopyChars=90
+  * "de la cuenta: máximo 20 / del anuncio: 100 caracteres" → maxTitleChars=20, maxCopyChars=100
+- OBJETIVO → Campaign objective (Awareness, Conversión, Tráfico)
+- GEOGRAFIA → Geographic targeting (Nacional, Regional, Ciudad)
+- **AUDIENCIAS** → THIS IS THE MACRO audience. MUST READ. Examples: "Generación Energía", "Motores del Día a Día", "Los comprometidos", "Vitalidad Clásica"
+- **AUDIENCIAS REFERENCIA** → THIS IS THE MICRO personas (comma-separated). MUST READ. Examples: "La guerrera del gimnasio, La influencer Wellness, el papá proveedor consciente"
+- **DRIVER** or **DRIVERS** or **Driver de Comunicación** → The communication angle/motivation. MUST READ if present.
+
+CRITICAL: The CSV may have the columns in ANY order. Use the HEADER to find the column index for each field.
+If a column has a similar name (e.g., "AUDIENCIA" instead of "AUDIENCIAS"), still use it.
+DO NOT leave audienciaMacro, audienciaReferencia, or driverComunicacion empty if those columns exist in the data.
 
 STEP 2 — MACRO vs MICRO AUDIENCE LOGIC (CRITICAL):
 The document has TWO audience columns:
