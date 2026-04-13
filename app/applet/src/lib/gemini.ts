@@ -17,12 +17,13 @@ export interface CreativeSpec {
 
 export async function extractAndOptimizePrompts(inputText: string): Promise<CreativeSpec[]> {
   // Truncate input to prevent massive payloads that can cause the model to hang
-  const truncatedInput = inputText.slice(0, 15000);
+  // Increased to 40000 characters to allow more rows (approx 150-200 rows depending on content)
+  const truncatedInput = inputText.slice(0, 40000);
 
   try {
-    // We use Promise.race to add a timeout just in case the API hangs, increased to 3 minutes for large requests
+    // We use Promise.race to add a timeout just in case the API hangs, increased to 4 minutes for large requests
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error("La solicitud a la IA ha tardado demasiado (Timeout). Intenta con menos texto.")), 180000);
+      setTimeout(() => reject(new Error("La solicitud a la IA ha tardado demasiado (Timeout). Intenta con menos texto.")), 240000);
     });
 
     const apiPromise = ai.models.generateContent({
