@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { extractAndOptimizePrompts, regenerateCopy, CreativeSpec } from './lib/gemini';
-import { Loader2, Upload, FileText, Sparkles, AlertCircle, Copy, Check, Layers, Palette, Type, AlignLeft, Tag, Crop, RefreshCw, X, MessageSquare, Download } from 'lucide-react';
+import { Loader2, Upload, FileText, Sparkles, AlertCircle, Copy, Check, Layers, Palette, Type, AlignLeft, Tag, Crop, RefreshCw, X, MessageSquare, Download, Image, Lightbulb, Trash2 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 export default function App() {
@@ -28,6 +28,10 @@ export default function App() {
   const [progress, setProgress] = useState('');
   const [sheetNames, setSheetNames] = useState<string[]>([]);
   const [pendingWorkbook, setPendingWorkbook] = useState<any>(null);
+
+  // Creative context: text notes, uploaded text files, uploaded images
+  const [contextText, setContextText] = useState('');
+  const [contextFiles, setContextFiles] = useState<{ name: string; content: string; type: 'text' | 'image' }[]>([]);
 
   const handleExportExcel = () => {
     if (creatives.length === 0) return;
@@ -108,7 +112,19 @@ export default function App() {
           headers.map(h => String(row[h] || '').replace(/[\n\r]+/g, ' ')).join('\t')
         );
 
-        const batchText = `${fileCtx}\n${headerLine}\n${batchLines.join('\n')}`;
+        // Build creative context block from user notes + uploaded text files
+        let contextBlock = '';
+        if (contextText.trim() || contextFiles.length > 0) {
+          const parts: string[] = [];
+          if (contextText.trim()) parts.push(`NOTAS DEL EQUIPO CREATIVO:\n${contextText.trim()}`);
+          contextFiles.forEach(f => {
+            if (f.type === 'text') parts.push(`ARCHIVO DE REFERENCIA (${f.name}):\n${f.content.slice(0, 5000)}`);
+            if (f.type === 'image') parts.push(`[Imagen de referencia adjunta: ${f.name}]`);
+          });
+          contextBlock = `\n\nCONTEXTO CREATIVO ADICIONAL (usa esta información para generar copys más relevantes y alineados):\n${parts.join('\n\n')}`;
+        }
+
+        const batchText = `${fileCtx}${contextBlock}\n${headerLine}\n${batchLines.join('\n')}`;
 
         try {
           const specs = await extractAndOptimizePrompts(batchText);
@@ -242,6 +258,35 @@ export default function App() {
     e.target.value = '';
   };
 
+  const handleContextFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    Array.from(files).forEach(file => {
+      const isImage = file.type.startsWith('image/');
+      const reader = new FileReader();
+
+      if (isImage) {
+        reader.onload = (evt) => {
+          const dataUrl = evt.target?.result as string;
+          setContextFiles(prev => [...prev, { name: file.name, content: dataUrl, type: 'image' }]);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        reader.onload = (evt) => {
+          const text = evt.target?.result as string;
+          setContextFiles(prev => [...prev, { name: file.name, content: text, type: 'text' }]);
+        };
+        reader.readAsText(file);
+      }
+    });
+    e.target.value = '';
+  };
+
+  const removeContextFile = (index: number) => {
+    setContextFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
@@ -367,6 +412,54 @@ export default function App() {
               </div>
             )}
 
+            {/* Creative Context Section */}
+            <div className="mb-4 p-4 bg-amber-50/60 border border-amber-200/80 rounded-xl">
+              <h3 className="text-sm font-bold text-amber-800 mb-2 flex items-center gap-2">
+                <Lightbulb className="w-4 h-4" />
+                Contexto Creativo (opcional)
+              </h3>
+              <p className="text-xs text-amber-700/80 mb-3">
+                Ideas que han funcionado, lo implementado, tono de marca, referencias visuales...
+              </p>
+              <textarea
+                className="w-full h-24 p-3 bg-white border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all resize-none text-sm leading-relaxed mb-3"
+                placeholder="Ej: Los copys que mejor han funcionado usan humor y referencias a la rutina diaria. El tono es cercano, no corporativo. Evitar hablar de precio. La campaña anterior 'Energía Real' tuvo buen engagement con audiencia joven..."
+                value={contextText}
+                onChange={(e) => setContextText(e.target.value)}
+              />
+
+              <div className="flex gap-2 mb-2">
+                <label className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-amber-100 border border-amber-200 rounded-lg cursor-pointer text-xs font-bold text-amber-700 transition-colors">
+                  <Image className="w-3.5 h-3.5" />
+                  Subir imagen
+                  <input type="file" className="hidden" accept="image/*" multiple onChange={handleContextFileUpload} />
+                </label>
+                <label className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-amber-100 border border-amber-200 rounded-lg cursor-pointer text-xs font-bold text-amber-700 transition-colors">
+                  <FileText className="w-3.5 h-3.5" />
+                  Subir texto/doc
+                  <input type="file" className="hidden" accept=".txt,.pdf,.doc,.docx,.rtf,.csv" multiple onChange={handleContextFileUpload} />
+                </label>
+              </div>
+
+              {contextFiles.length > 0 && (
+                <div className="space-y-2 mt-2">
+                  {contextFiles.map((f, i) => (
+                    <div key={i} className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-amber-100">
+                      {f.type === 'image' ? (
+                        <img src={f.content} alt={f.name} className="w-10 h-10 object-cover rounded" />
+                      ) : (
+                        <FileText className="w-4 h-4 text-amber-600 shrink-0" />
+                      )}
+                      <span className="text-xs text-gray-700 font-medium truncate flex-1">{f.name}</span>
+                      <button onClick={() => removeContextFile(i)} className="p-1 hover:bg-red-50 rounded text-stone-400 hover:text-red-500 transition-colors">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div className="relative mb-4">
               <div className="absolute inset-0 flex items-center" aria-hidden="true">
                 <div className="w-full border-t border-stone-200" />
@@ -377,8 +470,8 @@ export default function App() {
             </div>
 
             <textarea
-              className="w-full h-48 p-4 bg-white border border-stone-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all resize-none text-sm leading-relaxed"
-              placeholder="Ejemplo (Copiado de Excel):&#10;Campaña, Formato, Requerimientos&#10;Back to School, 1080x1080, Fondo amarillo corporativo, espacio a la izquierda para copy dinámico, niños felices con mochilas.&#10;Cyber Monday, 1920x1080, Fondo oscuro tecnológico, espacio central para precio dinámico."
+              className="w-full h-32 p-4 bg-white border border-stone-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all resize-none text-sm leading-relaxed"
+              placeholder="Pega datos tabulares directamente del Excel aquí..."
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
             />
