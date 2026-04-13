@@ -90,13 +90,17 @@ STEP 3 — GENERATE COPY RESPECTING THE EXACT CHARACTER LIMITS FROM THE "Texto" 
 - READ the "Texto" column for each row. It tells you the max characters.
 - If it says "200 Caracteres", your suggestedCopy MUST be ≤200 characters.
 - If it says "Título: max 25", your suggestedTitle MUST be ≤25 characters.
-- ALWAYS count characters before returning. If over the limit, rewrite shorter.
+- ALWAYS count characters before returning. If over the limit, REWRITE A COMPLETE SHORTER IDEA. Do NOT just cut the text.
+- The copy MUST be a COMPLETE THOUGHT — a full sentence or idea that ends naturally. NEVER leave a sentence unfinished.
 - The copy must be tailored to the platform (MEDIO), the chosen MICRO audience, and driver.
+- NO EMOJIS in titles or copy unless the brand explicitly uses them.
+- If the limit is tight (e.g., 25 chars), write a punchy slogan, not a truncated sentence.
 
 STEP 4 — AUDIENCE-SPECIFIC COPY STRATEGY:
 - Each MICRO persona has a unique worldview. Speak to THEIR specific reality.
 - The title and copy must feel like it was written BY someone who understands that specific persona.
 - NEVER use the same copy for different micro personas even if they share a macro audience.
+- Write a CONCRETE CONCEPT — a clear creative idea, not filler text. Each copy must have a hook that grabs attention.
 
 STEP 5 — UNDERSTAND CREATIVE CONTEXT & INDUSTRY TERMINOLOGY:
 - "Cápsulas Hero": Short, punchy call-to-action pieces. NOT about the product — attention-grabbing micro-moments. Bold statement + CTA.
@@ -105,17 +109,19 @@ STEP 5 — UNDERSTAND CREATIVE CONTEXT & INDUSTRY TERMINOLOGY:
 - "Conversión": Bottom-funnel — action NOW, CTA-heavy, urgency.
 
 STEP 6 — DISRUPTIVE, NON-GENERIC COPY:
-- NO generic messages like "Descubre lo mejor". BANNED.
+- NO generic messages like "Descubre lo mejor", "Sigue disfrutando", "Te da la vitalidad que necesitas". ALL BANNED.
 - Use provocative questions, bold statements, unexpected angles, emotional triggers.
-- Each creative = UNIQUE concept. Vary tone: playful, bold, emotional, data-driven.
+- Each creative = UNIQUE concept with a CLEAR IDEA that stands on its own. Vary tone: playful, bold, emotional, data-driven.
 - EVERY SINGLE COPY MUST BE UNIQUE. No two creatives with same title or copy.
+- The copy must feel like a professional copywriter wrote it, not a generic AI. Be specific, concrete, and memorable.
 
 CRITICAL RULES:
 1. "Zelva" / "Zelva Agencia Creativa" is the agency, NOT the brand.
-2. FLAWLESS SPANISH: Zero spelling mistakes, correct tildes.
-3. CHARACTER LIMITS FROM THE DOCUMENT ARE LAW.
+2. FLAWLESS SPANISH: Zero spelling mistakes, correct tildes. NO EMOJIS.
+3. CHARACTER LIMITS FROM THE DOCUMENT ARE LAW. But the text must be a COMPLETE idea within those limits.
 4. PROCESS EVERY ROW. 1 row = 1 creative. NEVER stop early.
-5. Each row in output array matches input order.`;
+5. Each row in output array matches input order.
+6. NEVER return a sentence that ends mid-thought or is cut off. Every suggestedTitle and suggestedCopy must read as a finished, polished piece of copy.`;
 
 const RESPONSE_SCHEMA = {
   type: "OBJECT",
@@ -185,12 +191,8 @@ ${truncatedInput}`;
     parsed.creatives.forEach((c: CreativeSpec) => {
       const titleMax = c.maxTitleChars || 40;
       const copyMax = c.maxCopyChars || 200;
-      if (c.suggestedTitle && c.suggestedTitle.length > titleMax) {
-        c.suggestedTitle = c.suggestedTitle.substring(0, titleMax).replace(/\s+\S*$/, '');
-      }
-      if (c.suggestedCopy && c.suggestedCopy.length > copyMax) {
-        c.suggestedCopy = c.suggestedCopy.substring(0, copyMax).replace(/\s+\S*$/, '');
-      }
+      // Do NOT truncate — the AI must generate complete ideas within limits.
+      // Truncating creates cut-off sentences that are unusable.
       c.medio = c.medio || '';
       c.formatoAnuncio = c.formatoAnuncio || '';
       c.creativo = c.creativo || '';
@@ -259,10 +261,7 @@ CRITICAL: Max ${charLimit} characters. COUNT THEM. FLAWLESS SPANISH.`;
     const cleanText = text.replace(/```json/gi, '').replace(/```/g, '').trim();
     const parsed = JSON.parse(cleanText);
 
-    let newText = parsed.newText || '';
-    if (newText.length > charLimit) {
-      newText = newText.substring(0, charLimit).replace(/\s+\S*$/, '');
-    }
+    const newText = parsed.newText || '';
 
     return {
       newText,
