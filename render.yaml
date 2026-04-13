@@ -2,7 +2,7 @@ services:
   - type: web
     name: promts
     runtime: node
-    buildCommand: npm install && echo "GEMINI_API_KEY=$GEMINI_API_KEY" > .env && npm run build
+    buildCommand: npm install && npm run render-build
     startCommand: node server.js
     envVars:
       - key: GEMINI_API_KEY
