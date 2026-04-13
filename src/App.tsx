@@ -10,6 +10,8 @@ import * as XLSX from 'xlsx';
 
 export default function App() {
   const [inputText, setInputText] = useState('');
+  const [excelRows, setExcelRows] = useState<Record<string, string>[]>([]);
+  const [fileName, setFileName] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [creatives, setCreatives] = useState<CreativeSpec[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -34,34 +36,49 @@ export default function App() {
     setProgress('Preparando lotes...');
 
     try {
-      const lines = inputText.split('\n');
-      // Find header line (first non-empty, non-filename line)
-      let headerIdx = 0;
-      for (let i = 0; i < lines.length; i++) {
-        if (lines[i].trim().length > 0 && !lines[i].startsWith('[Nombre')) {
-          headerIdx = i;
-          break;
-        }
+      // Use real Excel rows if available, otherwise fall back to text parsing
+      let rows: Record<string, string>[] = excelRows;
+      let headers: string[] = [];
+      let fileCtx = fileName ? `[Nombre del archivo original: ${fileName}]` : '';
+
+      if (rows.length > 0) {
+        headers = Object.keys(rows[0]);
+      } else {
+        // Fallback: parse from text input
+        const lines = inputText.split('\n').filter(l => l.trim().length > 0 && !l.startsWith('[Nombre'));
+        if (lines.length < 2) throw new Error("No se encontraron datos suficientes.");
+        headers = lines[0].split('\t').length > 1 ? lines[0].split('\t') : lines[0].split(',');
+        rows = lines.slice(1).map(line => {
+          const vals = line.split('\t').length > 1 ? line.split('\t') : line.split(',');
+          const obj: Record<string, string> = {};
+          headers.forEach((h, i) => { obj[h] = vals[i] || ''; });
+          return obj;
+        });
       }
-      const fileContext = lines.slice(0, headerIdx).join('\n').trim();
-      const headerLine = lines[headerIdx];
-      const dataLines = lines.slice(headerIdx + 1).filter(l => l.trim().length > 0);
 
       const BATCH_SIZE = 10;
-      const totalRows = dataLines.length;
+      const totalRows = rows.length;
       const allCreatives: CreativeSpec[] = [];
       let failures = 0;
 
-      for (let i = 0; i < dataLines.length; i += BATCH_SIZE) {
-        const batch = dataLines.slice(i, i + BATCH_SIZE);
+      // Build header line (tab-separated, clean)
+      const headerLine = headers.join('\t');
+
+      for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+        const batch = rows.slice(i, i + BATCH_SIZE);
         const batchNum = Math.floor(i / BATCH_SIZE) + 1;
-        const totalBatches = Math.ceil(dataLines.length / BATCH_SIZE);
+        const totalBatches = Math.ceil(rows.length / BATCH_SIZE);
         const from = i + 1;
         const to = Math.min(i + batch.length, totalRows);
 
         setProgress(`Lote ${batchNum}/${totalBatches} — filas ${from}-${to} de ${totalRows} (${allCreatives.length} generadas)`);
 
-        const batchText = `${fileContext ? fileContext + '\n' : ''}${headerLine}\n${batch.join('\n')}`;
+        // Convert batch rows to clean tab-separated text (no newlines inside cells)
+        const batchLines = batch.map(row =>
+          headers.map(h => String(row[h] || '').replace(/[\n\r]+/g, ' ')).join('\t')
+        );
+
+        const batchText = `${fileCtx}\n${headerLine}\n${batchLines.join('\n')}`;
 
         try {
           const specs = await extractAndOptimizePrompts(batchText);
@@ -71,7 +88,6 @@ export default function App() {
         } catch (err: any) {
           console.error(`Batch ${batchNum} failed:`, err);
           failures++;
-          // Continue with next batch
         }
       }
 
@@ -101,12 +117,21 @@ export default function App() {
         const wb = XLSX.read(bstr, { type: 'binary' });
         const wsname = wb.SheetNames[0];
         const ws = wb.Sheets[wsname];
-        const data = XLSX.utils.sheet_to_csv(ws);
-        
-        // REEMPLAZAR el texto en lugar de añadirlo, para evitar que se acumule en múltiples intentos
-        setInputText(`[Nombre del archivo original: ${file.name}]
 
-${data}`);
+        // Use sheet_to_json to get REAL rows (not broken CSV lines)
+        const rows = XLSX.utils.sheet_to_json<Record<string, string>>(ws, { defval: '' });
+
+        setExcelRows(rows);
+        setFileName(file.name);
+
+        // Build clean tab-separated text for display (no line breaks inside cells)
+        const headers = Object.keys(rows[0] || {});
+        const displayLines = [headers.join('\t')];
+        rows.forEach(row => {
+          displayLines.push(headers.map(h => String(row[h] || '').replace(/[\n\r]+/g, ' ')).join('\t'));
+        });
+
+        setInputText(`[Nombre del archivo original: ${file.name}]\n\n${displayLines.join('\n')}`);
         setError(null);
       } catch (err) {
         console.error(err);
@@ -259,7 +284,7 @@ ${data}`);
               ) : (
                 <>
                   <Sparkles className="w-5 h-5" />
-                  Generar Prompts Maestros
+                  Generar Prompts Maestros {excelRows.length > 0 ? `(${excelRows.length} filas)` : ''}
                 </>
               )}
             </button>
