@@ -1,10 +1,12 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
 const GEMINI_KEY = process.env.GEMINI_API_KEY || '';
+const GEMINI_KEY_BACKUP = process.env.GEMINI_API_KEY_BACKUP || '';
 
-function getAI() {
-  if (!GEMINI_KEY) throw new Error('GEMINI_API_KEY no configurada. Contacta al administrador.');
-  return new GoogleGenAI({ apiKey: GEMINI_KEY });
+function getAI(useBackup = false) {
+  const key = useBackup ? GEMINI_KEY_BACKUP : GEMINI_KEY;
+  if (!key) throw new Error('GEMINI_API_KEY no configurada. Contacta al administrador.');
+  return new GoogleGenAI({ apiKey: key });
 }
 
 export interface CreativeSpec {
@@ -29,7 +31,7 @@ export async function extractAndOptimizePrompts(inputText: string): Promise<Crea
       setTimeout(() => reject(new Error("La solicitud a la IA ha tardado demasiado (Timeout). Intenta con menos texto.")), 300000);
     });
 
-    const apiPromise = getAI().models.generateContent({
+    const callGemini = async (useBackup = false) => getAI(useBackup).models.generateContent({
       model: "gemini-2.5-flash",
       contents: `You are an Expert Prompt Engineer specializing in DCO (Dynamic Creative Optimization), Copywriting, and Brand Consistency.
 
@@ -105,7 +107,18 @@ ${truncatedInput}
       }
     });
 
-    const response = await Promise.race([apiPromise, timeoutPromise]) as any;
+    let response: any;
+    try {
+      response = await Promise.race([callGemini(false), timeoutPromise]) as any;
+    } catch (primaryErr: any) {
+      const msg = primaryErr?.message || '';
+      if ((msg.includes('403') || msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('leaked')) && GEMINI_KEY_BACKUP) {
+        console.warn('Primary API key failed, retrying with backup key...');
+        response = await Promise.race([callGemini(true), timeoutPromise]) as any;
+      } else {
+        throw primaryErr;
+      }
+    }
 
     const text = response.text;
     if (!text) throw new Error("La IA no devolvió ninguna respuesta.");
@@ -144,7 +157,7 @@ export async function regenerateCopy(
   const fieldName = fieldType === 'title' ? 'Title' : 'Copy';
 
   try {
-    const response = await getAI().models.generateContent({
+    const callRegenerate = (useBackup = false) => getAI(useBackup).models.generateContent({
       model: "gemini-2.5-flash",
       contents: `You are an Expert Copywriter and Prompt Engineer specializing in DCO (Dynamic Creative Optimization).
 
@@ -181,6 +194,19 @@ Return the newly generated text AND the updated master prompts.`,
         }
       }
     });
+
+    let response: any;
+    try {
+      response = await callRegenerate(false);
+    } catch (primaryErr: any) {
+      const msg = primaryErr?.message || '';
+      if ((msg.includes('403') || msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('leaked')) && GEMINI_KEY_BACKUP) {
+        console.warn('Primary API key failed in regenerate, retrying with backup...');
+        response = await callRegenerate(true);
+      } else {
+        throw primaryErr;
+      }
+    }
 
     const text = response.text;
     if (!text) throw new Error("La IA no devolvió ninguna respuesta.");
