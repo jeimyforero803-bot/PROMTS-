@@ -149,11 +149,15 @@ export default function App() {
         // Use sheet_to_json to get REAL rows (not broken CSV lines)
         const allRows = XLSX.utils.sheet_to_json<Record<string, string>>(ws, { defval: '' });
 
-        // Filter: only rows where at least one cell has real content
+        // Filter: only rows where at least 3 columns have real content (not just row numbers)
         const headers = Object.keys(allRows[0] || {});
-        const rows = allRows.filter(row =>
-          headers.some(h => String(row[h] || '').trim().length > 0)
-        );
+        const rows = allRows.filter(row => {
+          const filledCols = headers.filter(h => {
+            const val = String(row[h] || '').trim();
+            return val.length > 0 && val !== '0';
+          });
+          return filledCols.length >= 3;
+        });
 
         setExcelRows(rows);
         setFileName(file.name);
