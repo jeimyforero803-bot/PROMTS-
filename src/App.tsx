@@ -1044,18 +1044,12 @@ export default function App() {
                           <h4 className="text-xs font-bold text-green-700 uppercase tracking-wider flex items-center gap-1">
                             <Crop className="w-3 h-3" /> Prompt de Adaptación (Outpainting)
                           </h4>
-                          <button 
-                            onClick={() => copyToClipboard(creative.resizePrompt, `${creative.id}-resize`)}
-                            className="flex items-center gap-1 px-2 py-1 bg-stone-50 hover:bg-green-50 text-stone-600 hover:text-green-600 rounded text-[10px] font-bold transition-colors border border-stone-200 hover:border-green-200"
-                          >
-                            {copiedId === `${creative.id}-resize` ? (
-                              <><Check className="w-3 h-3 text-green-600" /> Copiado</>
-                            ) : (
-                              <><Copy className="w-3 h-3" /> Copiar</>
-                            )}
+                          <button onClick={() => copyToClipboard(creative.resizePrompt, `${creative.id}-resize`)}
+                            className="flex items-center gap-1 px-2 py-1 bg-white hover:bg-green-50 text-stone-600 hover:text-green-600 rounded text-[10px] font-bold transition-colors border border-stone-200 hover:border-green-200">
+                            {copiedId === `${creative.id}-resize` ? <><Check className="w-3 h-3 text-green-600" /> Copiado</> : <><Copy className="w-3 h-3" /> Copiar</>}
                           </button>
                         </div>
-                        <div className="bg-green-50/50 border border-green-200 p-4 rounded-xl text-xs text-gray-700 leading-relaxed flex-1 font-mono overflow-y-auto whitespace-pre-wrap">
+                        <div className="bg-green-50/50 border border-green-200 p-4 rounded-xl text-xs text-green-800 leading-relaxed flex-1 overflow-y-auto font-mono">
                           {creative.resizePrompt}
                         </div>
                       </div>
