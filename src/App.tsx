@@ -43,12 +43,15 @@ export default function App() {
       return {
         ...original,
         'TÍTULO GENERADO': c.suggestedTitle,
-        'COPY GENERADO': c.suggestedCopy,
+        'COPY PRINCIPAL': c.copyPrincipal || '',
+        'DESARROLLO': c.desarrollo || '',
+        'CIERRE': c.cierre || '',
+        'COPY COMPLETO': c.suggestedCopy,
         'AUDIENCIA MACRO': c.audienciaMacro,
         'MICRO ELEGIDA': c.audienciaReferenciaElegida,
         'DRIVER': c.driverComunicacion,
-        'PROMPT MAESTRO (EN)': `take as a reference this creative and generate 5 different variants with this image. respect the logo 100% faithful and the identity of the brand ${c.identifiedBrand}. change the background environment and the character to: ${c.campaignContext}. take the same font and Include the exact text '${c.suggestedTitle}' and '${c.suggestedCopy}' ensuring flawless spelling. be faithful to the initial logo and the graphic lines.`,
-        'PROMPT MAESTRO (ES)': `toma como referencia esta pieza creativa y genera 5 variantes diferentes con esta imagen. respeta el logo 100% fiel y la identidad de la marca ${c.identifiedBrand}. cambia el entorno del fondo y el personaje a: ${c.campaignContext}. usa la misma tipografía e incluye el texto exacto '${c.suggestedTitle}' y '${c.suggestedCopy}' asegurando ortografía impecable. sé fiel al logo inicial y a las líneas gráficas.`,
+        'PROMPT MAESTRO (EN)': `take as a reference this creative and generate 5 different variants with this image. respect the logo 100% faithful and the identity of the brand ${c.identifiedBrand}. change the background environment and the character to: ${c.campaignContext}. take the same font and Include the exact text — Hook: '${c.copyPrincipal || c.suggestedTitle}', Body: '${c.desarrollo || ''}', CTA: '${c.cierre || ''}' — ensuring flawless spelling. be faithful to the initial logo and the graphic lines.`,
+        'PROMPT MAESTRO (ES)': `toma como referencia esta pieza creativa y genera 5 variantes diferentes con esta imagen. respeta el logo 100% fiel y la identidad de la marca ${c.identifiedBrand}. cambia el entorno del fondo y el personaje a: ${c.campaignContext}. usa la misma tipografía e incluye el texto exacto — Copy principal: '${c.copyPrincipal || c.suggestedTitle}', Desarrollo: '${c.desarrollo || ''}', Cierre: '${c.cierre || ''}' — asegurando ortografía impecable. sé fiel al logo inicial y a las líneas gráficas.`,
         'PROMPT RESIZE': c.resizePrompt,
       };
     });
@@ -78,6 +81,9 @@ export default function App() {
 
     const title = get(['TÍTULO', 'TITULO', 'TITLE', 'HEADLINE']);
     const copy = get(['COPY', 'TEXTO SUGERIDO', 'DESCRIPCION', 'DESCRIPTION']);
+    const copyPrincipalVal = get(['COPY PRINCIPAL', 'HOOK', 'PRINCIPAL']);
+    const desarrolloVal = get(['DESARROLLO', 'BODY', 'CUERPO']);
+    const cierreVal = get(['CIERRE', 'CTA', 'CALL TO ACTION', 'CLOSING']);
     const medio = get(['MEDIO', 'PLATAFORMA', 'PLATFORM']);
     const formato = get(['FORMATO DE ANUNCIO', 'FORMATO ANUNCIO', 'AD FORMAT']);
     const creativo = get(['CREATIVO', 'CREATIVE', 'TIPO']);
@@ -116,6 +122,9 @@ export default function App() {
       campaignContext: context,
       suggestedTitle: title || concepto || '',
       suggestedCopy: copy || '',
+      copyPrincipal: copyPrincipalVal || '',
+      desarrollo: desarrolloVal || '',
+      cierre: cierreVal || '',
       brandGuidelines: '',
       masterPromptEn: `take as a reference this creative and generate 5 different variants with this image. respect the logo 100% faithful and the identity of the brand ${brand}. change the background environment and the character to: ${context}. take the same font and Include the exact text '${title || concepto || ''}' and '${copy || ''}' ensuring flawless spelling. be faithful to the initial logo and the graphic lines.`,
       masterPromptEs: `toma como referencia esta pieza creativa y genera 5 variantes diferentes con esta imagen. respeta el logo 100% fiel y la identidad de la marca ${brand}. cambia el entorno del fondo y el personaje a: ${context}. usa la misma tipografía e incluye el texto exacto '${title || concepto || ''}' y '${copy || ''}' asegurando ortografía impecable. sé fiel al logo inicial y a las líneas gráficas.`,
@@ -736,11 +745,11 @@ export default function App() {
                         </div>
                       </div>
 
-                      {/* Suggested Copy */}
+                      {/* Suggested Copy — full */}
                       <div className="bg-orange-50/50 border border-orange-100/50 p-4 rounded-xl relative group">
                         <div className="flex justify-between items-center mb-2">
                           <span className="text-xs font-bold text-orange-600 uppercase tracking-wider flex items-center gap-1">
-                            <AlignLeft className="w-3 h-3" /> Texto Sugerido
+                            <AlignLeft className="w-3 h-3" /> Texto Completo
                           </span>
                           <span className={`text-xs font-bold ${creative.suggestedCopy.length > (creative.maxCopyChars || 200) ? 'text-red-500' : 'text-green-600'}`}>
                             {creative.suggestedCopy.length}/{creative.maxCopyChars || 200}
@@ -765,6 +774,63 @@ export default function App() {
                         </div>
                       </div>
 
+                      {/* Copy Structure: Principal / Desarrollo / Cierre */}
+                      {(creative.copyPrincipal || creative.desarrollo || creative.cierre) && (
+                        <div className="bg-blue-50/50 border border-blue-100/50 p-4 rounded-xl space-y-3">
+                          <span className="text-xs font-bold text-blue-600 uppercase tracking-wider flex items-center gap-1">
+                            <Layers className="w-3 h-3" /> Estructura del Copy (Frames)
+                          </span>
+                          {creative.copyPrincipal && (
+                            <div className="relative group/cp">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-[10px] font-black text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full uppercase">Copy Principal</span>
+                                <span className="text-[10px] text-gray-400">Hook / Apertura</span>
+                              </div>
+                              <p className="text-sm text-gray-800 font-semibold pl-2 border-l-2 border-blue-400">{creative.copyPrincipal}</p>
+                              <button
+                                onClick={() => copyToClipboard(creative.copyPrincipal, `${creative.id}-cp`)}
+                                className="absolute top-0 right-0 p-1 opacity-0 group-hover/cp:opacity-100 transition-opacity bg-white rounded shadow-sm text-gray-400 hover:text-blue-600"
+                                title="Copiar"
+                              >
+                                {copiedId === `${creative.id}-cp` ? <Check className="w-3 h-3 text-green-600" /> : <Copy className="w-3 h-3" />}
+                              </button>
+                            </div>
+                          )}
+                          {creative.desarrollo && (
+                            <div className="relative group/dev">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-[10px] font-black text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full uppercase">Desarrollo</span>
+                                <span className="text-[10px] text-gray-400">Cuerpo / Beneficio</span>
+                              </div>
+                              <p className="text-sm text-gray-800 pl-2 border-l-2 border-emerald-400">{creative.desarrollo}</p>
+                              <button
+                                onClick={() => copyToClipboard(creative.desarrollo, `${creative.id}-dev`)}
+                                className="absolute top-0 right-0 p-1 opacity-0 group-hover/dev:opacity-100 transition-opacity bg-white rounded shadow-sm text-gray-400 hover:text-emerald-600"
+                                title="Copiar"
+                              >
+                                {copiedId === `${creative.id}-dev` ? <Check className="w-3 h-3 text-green-600" /> : <Copy className="w-3 h-3" />}
+                              </button>
+                            </div>
+                          )}
+                          {creative.cierre && (
+                            <div className="relative group/cl">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-[10px] font-black text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full uppercase">Cierre</span>
+                                <span className="text-[10px] text-gray-400">CTA / Llamado a la acción</span>
+                              </div>
+                              <p className="text-sm text-gray-800 font-medium pl-2 border-l-2 border-amber-400">{creative.cierre}</p>
+                              <button
+                                onClick={() => copyToClipboard(creative.cierre, `${creative.id}-cl`)}
+                                className="absolute top-0 right-0 p-1 opacity-0 group-hover/cl:opacity-100 transition-opacity bg-white rounded shadow-sm text-gray-400 hover:text-amber-600"
+                                title="Copiar"
+                              >
+                                {copiedId === `${creative.id}-cl` ? <Check className="w-3 h-3 text-green-600" /> : <Copy className="w-3 h-3" />}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       {/* Brand Guidelines */}
                       <div className="bg-purple-50/50 border border-purple-100/50 p-4 rounded-xl relative group">
                         <span className="text-xs font-bold text-purple-600 uppercase tracking-wider flex items-center gap-1 mb-2">
@@ -783,8 +849,10 @@ export default function App() {
 
                       {/* Filled Template Prompt */}
                       {(() => {
-                        const filledEn = `take as a reference this creative and generate 5 different variants with this image. respect the logo 100% faithful and the identity of the brand ${creative.identifiedBrand}. change the background environment and the character to: ${creative.campaignContext}. take the same font and Include the exact text '${creative.suggestedTitle}' and '${creative.suggestedCopy}' ensuring flawless spelling. be faithful to the initial logo and the graphic lines.`;
-                        const filledEs = `toma como referencia esta pieza creativa y genera 5 variantes diferentes con esta imagen. respeta el logo 100% fiel y la identidad de la marca ${creative.identifiedBrand}. cambia el entorno del fondo y el personaje a: ${creative.campaignContext}. usa la misma tipografía e incluye el texto exacto '${creative.suggestedTitle}' y '${creative.suggestedCopy}' asegurando ortografía impecable. sé fiel al logo inicial y a las líneas gráficas.`;
+                        const copyText = creative.copyPrincipal ? `Hook: '${creative.copyPrincipal}', Body: '${creative.desarrollo || ''}', CTA: '${creative.cierre || ''}'` : `'${creative.suggestedTitle}' and '${creative.suggestedCopy}'`;
+                        const copyTextEs = creative.copyPrincipal ? `Copy principal: '${creative.copyPrincipal}', Desarrollo: '${creative.desarrollo || ''}', Cierre: '${creative.cierre || ''}'` : `'${creative.suggestedTitle}' y '${creative.suggestedCopy}'`;
+                        const filledEn = `take as a reference this creative and generate 5 different variants with this image. respect the logo 100% faithful and the identity of the brand ${creative.identifiedBrand}. change the background environment and the character to: ${creative.campaignContext}. take the same font and Include the exact text — ${copyText} — ensuring flawless spelling. be faithful to the initial logo and the graphic lines.`;
+                        const filledEs = `toma como referencia esta pieza creativa y genera 5 variantes diferentes con esta imagen. respeta el logo 100% fiel y la identidad de la marca ${creative.identifiedBrand}. cambia el entorno del fondo y el personaje a: ${creative.campaignContext}. usa la misma tipografía e incluye el texto exacto — ${copyTextEs} — asegurando ortografía impecable. sé fiel al logo inicial y a las líneas gráficas.`;
                         return (
                           <>
                             {/* English Filled */}
@@ -807,11 +875,16 @@ export default function App() {
                                 <span className="text-green-400 font-bold">{creative.identifiedBrand}</span>
                                 <span className="text-stone-400">. change the background environment and the character to: </span>
                                 <span className="text-green-400 font-bold">{creative.campaignContext}</span>
-                                <span className="text-stone-400">. take the same font and Include the exact text '</span>
-                                <span className="text-orange-400 font-bold">{creative.suggestedTitle}</span>
-                                <span className="text-stone-400">' and '</span>
-                                <span className="text-orange-400 font-bold">{creative.suggestedCopy}</span>
-                                <span className="text-stone-400">' ensuring flawless spelling. be faithful to the initial logo and the graphic lines.</span>
+                                <span className="text-stone-400">. take the same font and Include the exact text — </span>
+                                {creative.copyPrincipal ? (<>
+                                  <span className="text-stone-400">Hook: '</span><span className="text-orange-400 font-bold">{creative.copyPrincipal}</span>
+                                  <span className="text-stone-400">', Body: '</span><span className="text-cyan-400 font-bold">{creative.desarrollo}</span>
+                                  <span className="text-stone-400">', CTA: '</span><span className="text-amber-400 font-bold">{creative.cierre}</span><span className="text-stone-400">'</span>
+                                </>) : (<>
+                                  <span className="text-stone-400">'</span><span className="text-orange-400 font-bold">{creative.suggestedTitle}</span>
+                                  <span className="text-stone-400">' and '</span><span className="text-orange-400 font-bold">{creative.suggestedCopy}</span><span className="text-stone-400">'</span>
+                                </>)}
+                                <span className="text-stone-400"> — ensuring flawless spelling. be faithful to the initial logo and the graphic lines.</span>
                               </div>
                             </div>
 
@@ -835,11 +908,16 @@ export default function App() {
                                 <span className="text-green-400 font-bold">{creative.identifiedBrand}</span>
                                 <span className="text-stone-400">. cambia el entorno del fondo y el personaje a: </span>
                                 <span className="text-green-400 font-bold">{creative.campaignContext}</span>
-                                <span className="text-stone-400">. usa la misma tipografía e incluye el texto exacto '</span>
-                                <span className="text-orange-400 font-bold">{creative.suggestedTitle}</span>
-                                <span className="text-stone-400">' y '</span>
-                                <span className="text-orange-400 font-bold">{creative.suggestedCopy}</span>
-                                <span className="text-stone-400">' asegurando ortografía impecable. sé fiel al logo inicial y a las líneas gráficas.</span>
+                                <span className="text-stone-400">. usa la misma tipografía e incluye el texto exacto — </span>
+                                {creative.copyPrincipal ? (<>
+                                  <span className="text-stone-400">Copy principal: '</span><span className="text-orange-400 font-bold">{creative.copyPrincipal}</span>
+                                  <span className="text-stone-400">', Desarrollo: '</span><span className="text-cyan-400 font-bold">{creative.desarrollo}</span>
+                                  <span className="text-stone-400">', Cierre: '</span><span className="text-amber-400 font-bold">{creative.cierre}</span><span className="text-stone-400">'</span>
+                                </>) : (<>
+                                  <span className="text-stone-400">'</span><span className="text-orange-400 font-bold">{creative.suggestedTitle}</span>
+                                  <span className="text-stone-400">' y '</span><span className="text-orange-400 font-bold">{creative.suggestedCopy}</span><span className="text-stone-400">'</span>
+                                </>)}
+                                <span className="text-stone-400"> — asegurando ortografía impecable. sé fiel al logo inicial y a las líneas gráficas.</span>
                               </div>
                             </div>
                           </>

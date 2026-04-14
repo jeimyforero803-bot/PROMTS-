@@ -19,6 +19,9 @@ export interface CreativeSpec {
   campaignContext: string;
   suggestedTitle: string;
   suggestedCopy: string;
+  copyPrincipal: string;
+  desarrollo: string;
+  cierre: string;
   brandGuidelines: string;
   masterPromptEn: string;
   masterPromptEs: string;
@@ -96,6 +99,15 @@ STEP 3 — GENERATE COPY RESPECTING THE EXACT CHARACTER LIMITS FROM THE "Texto" 
 - NO EMOJIS in titles or copy unless the brand explicitly uses them.
 - If the limit is tight (e.g., 25 chars), write a punchy slogan, not a truncated sentence.
 
+STEP 3.5 — STRUCTURE THE COPY INTO 3 PARTS (CRITICAL FOR VIDEO FRAMES & STATICS):
+Every creative has 3 text layers that appear sequentially in video frames or as visual hierarchy in statics:
+- **copyPrincipal**: The HOOK — the main attention-grabbing line. Bold, provocative, emotional. This is the first thing the viewer reads. Short and punchy.
+- **desarrollo**: The BODY — expands on the hook with product benefit, reason-to-believe, or emotional payoff. More informative, connects the hook to the brand/product.
+- **cierre**: The CTA/CLOSE — call to action or closing tagline. Short, direct, actionable. Examples: "Tómalo todos los días", "Encuéntralo en tu tienda", "Descarga ahora".
+The suggestedCopy field should contain ALL three parts concatenated: "copyPrincipal + desarrollo + cierre".
+But you MUST also return each part separately in copyPrincipal, desarrollo, and cierre fields.
+The total of all 3 parts must respect the character limit from the Texto column.
+
 STEP 4 — AUDIENCE-SPECIFIC COPY STRATEGY:
 - Each MICRO persona has a unique worldview. Speak to THEIR specific reality.
 - The title and copy must feel like it was written BY someone who understands that specific persona.
@@ -151,12 +163,15 @@ const RESPONSE_SCHEMA = {
           campaignContext: { type: "STRING" },
           suggestedTitle: { type: "STRING" },
           suggestedCopy: { type: "STRING" },
+          copyPrincipal: { type: "STRING" },
+          desarrollo: { type: "STRING" },
+          cierre: { type: "STRING" },
           brandGuidelines: { type: "STRING" },
           masterPromptEn: { type: "STRING" },
           masterPromptEs: { type: "STRING" },
           resizePrompt: { type: "STRING" }
         },
-        required: ["id", "identifiedBrand", "medio", "formatoAnuncio", "creativo", "formatAndSize", "formato", "peso", "textoSpec", "maxTitleChars", "maxCopyChars", "objetivo", "geografia", "audienciaMacro", "audienciaReferencia", "audienciaReferenciaElegida", "campaignContext", "suggestedTitle", "suggestedCopy", "brandGuidelines", "masterPromptEn", "masterPromptEs", "resizePrompt"]
+        required: ["id", "identifiedBrand", "medio", "formatoAnuncio", "creativo", "formatAndSize", "formato", "peso", "textoSpec", "maxTitleChars", "maxCopyChars", "objetivo", "geografia", "audienciaMacro", "audienciaReferencia", "audienciaReferenciaElegida", "campaignContext", "suggestedTitle", "suggestedCopy", "copyPrincipal", "desarrollo", "cierre", "brandGuidelines", "masterPromptEn", "masterPromptEs", "resizePrompt"]
       }
     }
   },
@@ -207,6 +222,9 @@ ${truncatedInput}`;
       c.audienciaReferencia = c.audienciaReferencia || '';
       c.audienciaReferenciaElegida = c.audienciaReferenciaElegida || '';
       c.driverComunicacion = c.driverComunicacion || '';
+      c.copyPrincipal = c.copyPrincipal || '';
+      c.desarrollo = c.desarrollo || '';
+      c.cierre = c.cierre || '';
     });
 
     return parsed.creatives;
