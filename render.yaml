@@ -2,7 +2,7 @@ services:
   - type: web
     name: promts
     runtime: node
-    buildCommand: npm install --omit=dev
+    buildCommand: rm -rf node_modules && npm install --production
     startCommand: node server.js
     envVars:
       - key: NODE_VERSION
