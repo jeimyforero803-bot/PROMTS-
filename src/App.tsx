@@ -50,10 +50,10 @@ export default function App() {
         'AUDIENCIA MACRO': c.audienciaMacro,
         'MICRO ELEGIDA': c.audienciaReferenciaElegida,
         'DRIVER': c.driverComunicacion,
-        'PROMPT F1 — IMAGEN': c.copyPrincipal ? `Analyze the reference image. Generate 5 variants maintaining IDENTICAL visual identity — same layout, background color, logo ${c.identifiedBrand} (same position/size), product (photographic fidelity), font, graphic elements. TEXT: [${c.copyPrincipal}] [${c.copyPrincipal}]. ONLY change person/character and background.` : '',
-        'PROMPT F2 — IMAGEN': c.desarrollo ? `Analyze the reference image. Generate 5 variants maintaining IDENTICAL visual identity — same layout, background color, logo ${c.identifiedBrand} (same position/size), product (photographic fidelity), font, graphic elements. TEXT: [${c.desarrollo}] [${c.desarrollo}]. ONLY change person/character and background.` : '',
-        'PROMPT F3 — IMAGEN': c.cierre ? `Analyze the reference image. Generate 5 variants maintaining IDENTICAL visual identity — same layout, background color, logo ${c.identifiedBrand} (same position/size), product (photographic fidelity), font, graphic elements. TEXT: [${c.cierre}] [${c.cierre}]. Logo and product prominent. ONLY change person/character and background.` : '',
-        'PROMPT VIDEO': c.copyPrincipal ? `Analyze the reference image. Create a 15-second video maintaining IDENTICAL visual identity in every frame — same layout, colors, logo ${c.identifiedBrand}, product, font, graphic elements. FRAMES: 0-3s [${c.copyPrincipal}] | 3-9s [${c.desarrollo || ''}] | 9-13s [${c.cierre || ''}] | 13-15s Logo + product centered. Text rendered letter by letter from brackets. Smooth transitions. Consistent style ALL frames.` : '',
+        'PROMPT F1 — IMAGEN': c.copyPrincipal ? `Take as a reference this creative and generate 5 different variants with this image. Respect the logo 100% faithful and the identity of the brand ${c.identifiedBrand}. Change the background environment and the character. Take the same font and include the exact text [${c.copyPrincipal}] ensuring flawless spelling — render each letter exactly as shown inside the brackets, including all accent marks. Be faithful to the initial logo and the graphic lines.` : '',
+        'PROMPT F2 — IMAGEN': c.desarrollo ? `Take as a reference this creative and generate 5 different variants with this image. Respect the logo 100% faithful and the identity of the brand ${c.identifiedBrand}. Change the background environment and the character. Take the same font and include the exact text [${c.desarrollo}] ensuring flawless spelling — render each letter exactly as shown inside the brackets, including all accent marks. Be faithful to the initial logo and the graphic lines.` : '',
+        'PROMPT F3 — IMAGEN': c.cierre ? `Take as a reference this creative and generate 5 different variants with this image. Respect the logo 100% faithful and the identity of the brand ${c.identifiedBrand}. Change the background environment and the character. Take the same font and include the exact text [${c.cierre}] ensuring flawless spelling — render each letter exactly as shown inside the brackets, including all accent marks. Be faithful to the initial logo and the graphic lines.` : '',
+        'PROMPT VIDEO': c.copyPrincipal ? `Take as a reference this creative and generate a 15-second video sequence for ${c.identifiedBrand}. Respect the logo 100% faithful. Take the same font, colors, and graphic lines. Frames: 0-3s [${c.copyPrincipal}] | 3-9s [${c.desarrollo || ''}] | 9-13s [${c.cierre || ''}] | 13-15s logo + product centered. Ensure flawless spelling — render each letter exactly as shown inside brackets, including all accent marks. Smooth transitions. Faithful to logo and graphic lines throughout.` : '',
         'PROMPT RESIZE': c.resizePrompt,
       };
     });
@@ -887,11 +887,6 @@ export default function App() {
                         const dev = creative.desarrollo || '';
                         const cl = creative.cierre || '';
                         const b = (t: string) => t ? `[${t}]` : '';
-                        const tildes = (t: string) => {
-                          const s = t.match(/[áéíóúñÁÉÍÓÚÑ]/g);
-                          if (!s || !s.length) return '';
-                          return ` Tildes obligatorias: ${[...new Set(s)].map(c => `"${c}"`).join(', ')} — deben aparecer exactamente así.`;
-                        };
 
                         const frames = [
                           { label: 'FRAME 1 — Copy Principal', color: 'blue', text: cp, timing: '0-3s' },
@@ -899,9 +894,9 @@ export default function App() {
                           { label: 'FRAME 3 — Cierre', color: 'amber', text: cl, timing: '9-13s' },
                         ].filter(f => f.text);
 
-                        const imgPrompt = (text: string, frameNum: number) => `Analyze the reference image. Generate 5 variants maintaining the IDENTICAL visual identity.\n\nIDENTITY RULES:\n- Same layout, same composition, same proportions between elements.\n- Same background color/gradient — do NOT change the dominant color.\n- Logo of ${brand}: same position, same size, pixel-perfect. Do NOT alter.\n- Product: photographic fidelity — exact colors, legible label, correct shape.\n- Same font family, weight, size, color and alignment.\n- Same graphic elements: lines, shapes, borders, overlays.\n- Photo style: same crop, lighting, color grading.\n\nTEXT (render letter by letter, zero errors):\n${b(text)}\n${b(text)}${tildes(text)}\n\nONLY CHANGE: the person/character and the background environment.\nEverything else is IDENTICAL to the reference.`;
+                        const imgPrompt = (text: string) => `Take as a reference this creative and generate 5 different variants with this image. Respect the logo 100% faithful and the identity of the brand ${brand}. Change the background environment and the character to a different person in a different setting. Take the same font and include the exact text ${b(text)} ensuring flawless spelling — render each letter exactly as shown inside the brackets, including all accent marks (á, é, í, ó, ú, ñ). Be faithful to the initial logo and the graphic lines.`;
 
-                        const videoPrompt = `Analyze the reference image. Create a 15-second video maintaining the IDENTICAL visual identity in every frame.\n\nIDENTITY RULES:\n- Same layout, composition, proportions.\n- Same background color/gradient across all frames.\n- Logo of ${brand}: same position, same size, pixel-perfect.\n- Product: photographic fidelity.\n- Same font family, weight, size, color, alignment.\n- Same graphic elements.\n\nFRAMES:\n${frames.map(f => `${f.timing} → ${b(f.text)}${tildes(f.text)}`).join('\n')}\n13-15s → Logo + producto centrado, fondo de marca.\n\nTEXT RULES: Render ONLY what is inside brackets, letter by letter. Zero spelling errors.\nMOTION: Smooth transitions (fade/slide). Text enters with subtle animation. Consistent style in ALL frames.`;
+                        const videoPrompt = `Take as a reference this creative and generate a 15-second video sequence for ${brand}. Respect the logo 100% faithful and the identity of the brand. Take the same font, colors, and graphic lines.\n\nFrame sequence:\n${frames.map(f => `${f.timing}: include the exact text ${b(f.text)}`).join('\n')}\n13-15s: logo + product centered, brand background.\n\nEnsure flawless spelling — render each letter exactly as shown inside the brackets, including all accent marks (á, é, í, ó, ú, ñ). Smooth transitions between frames. Be faithful to the initial logo and graphic lines throughout all frames.`;
 
                         const colorMap: Record<string, string> = { blue: 'text-blue-400', emerald: 'text-emerald-400', amber: 'text-amber-400' };
                         const borderMap: Record<string, string> = { blue: 'border-blue-500/30', emerald: 'border-emerald-500/30', amber: 'border-amber-500/30' };
@@ -911,7 +906,7 @@ export default function App() {
                         return (
                           <>
                             {frames.map((f, fi) => {
-                              const prompt = imgPrompt(f.text, fi);
+                              const prompt = imgPrompt(f.text);
                               return (
                                 <div key={fi} className={`flex flex-col border rounded-xl overflow-hidden ${borderMap[f.color]}`}>
                                   <div className={`flex items-center justify-between px-4 py-2 ${bgMap[f.color]}`}>
@@ -925,18 +920,11 @@ export default function App() {
                                     </button>
                                   </div>
                                   <div className="bg-stone-900 border-t border-stone-700 p-4 text-xs text-stone-300 leading-relaxed font-mono whitespace-pre-wrap">
-                                    <span className="text-stone-400">Analyze the reference image. Generate 5 variants maintaining the IDENTICAL visual identity.{'\n\n'}</span>
-                                    <span className="text-stone-500">IDENTITY RULES:{'\n'}</span>
-                                    <span className="text-stone-400">- Same layout, composition, proportions.{'\n'}- Same background color/gradient.{'\n'}- Logo </span>
+                                    <span className="text-stone-400">Take as a reference this creative and generate 5 different variants with this image. Respect the logo 100% faithful and the identity of the brand </span>
                                     <span className="text-green-400 font-bold">{brand}</span>
-                                    <span className="text-stone-400">: same position, size, pixel-perfect.{'\n'}- Product: photographic fidelity.{'\n'}- Same font, weight, size, color, alignment.{'\n'}- Same graphic elements.{'\n\n'}</span>
-                                    <span className="text-stone-500">TEXT:{'\n'}</span>
+                                    <span className="text-stone-400">. Change the background environment and the character to a different person in a different setting. Take the same font and include the exact text </span>
                                     <span className={`font-bold ${colorMap[f.color]}`}>[{f.text}]</span>
-                                    <span className="text-stone-400">{'\n'}</span>
-                                    <span className={`font-bold ${colorMap[f.color]}`}>[{f.text}]</span>
-                                    <span className="text-stone-400">{tildes(f.text)}{'\n\n'}</span>
-                                    <span className="text-stone-500">CHANGE:{'\n'}</span>
-                                    <span className="text-stone-400">ONLY the person/character and background. Everything else IDENTICAL.</span>
+                                    <span className="text-stone-400"> ensuring flawless spelling — render each letter exactly as shown inside the brackets, including all accent marks (á, é, í, ó, ú, ñ). Be faithful to the initial logo and the graphic lines.</span>
                                   </div>
                                 </div>
                               );
@@ -954,22 +942,17 @@ export default function App() {
                                 </button>
                               </div>
                               <div className="bg-stone-900 border-t border-stone-700 p-4 text-xs text-stone-300 leading-relaxed font-mono whitespace-pre-wrap">
-                                <span className="text-stone-400">Analyze the reference image. Create a 15-second video maintaining IDENTICAL visual identity.{'\n\n'}</span>
-                                <span className="text-stone-500">IDENTITY RULES:{'\n'}</span>
-                                <span className="text-stone-400">Same layout, colors, logo (</span>
+                                <span className="text-stone-400">Take as a reference this creative and generate a 15-second video sequence for </span>
                                 <span className="text-green-400 font-bold">{brand}</span>
-                                <span className="text-stone-400">), product, font, graphic elements.{'\n\n'}</span>
-                                <span className="text-stone-500">FRAMES:{'\n'}</span>
+                                <span className="text-stone-400">. Respect the logo 100% faithful and the identity of the brand. Take the same font, colors, and graphic lines.{'\n\n'}</span>
                                 {frames.map((f, fi) => (
                                   <span key={fi}>
-                                    <span className="text-stone-400">{f.timing} → </span>
+                                    <span className="text-stone-400">{f.timing}: include the exact text </span>
                                     <span className={`font-bold ${colorMap[f.color]}`}>[{f.text}]</span>
-                                    <span className="text-stone-400">{tildes(f.text)}{'\n'}</span>
+                                    <span className="text-stone-400">{'\n'}</span>
                                   </span>
                                 ))}
-                                <span className="text-stone-400">13-15s → Logo + producto centrado{'\n\n'}</span>
-                                <span className="text-stone-500">MOTION:{'\n'}</span>
-                                <span className="text-stone-400">Smooth transitions. Consistent style ALL frames.</span>
+                                <span className="text-stone-400">13-15s: logo + product centered, brand background.{'\n\n'}Ensure flawless spelling — render each letter exactly as shown inside the brackets, including all accent marks (á, é, í, ó, ú, ñ). Smooth transitions between frames. Be faithful to the initial logo and graphic lines throughout all frames.</span>
                               </div>
                             </div>
                           </>
