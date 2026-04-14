@@ -80,10 +80,41 @@ export default function App() {
     };
 
     const title = get(['TÍTULO', 'TITULO', 'TITLE', 'HEADLINE']);
-    const copy = get(['COPY', 'TEXTO SUGERIDO', 'DESCRIPCION', 'DESCRIPTION']);
-    const copyPrincipalVal = get(['COPY PRINCIPAL', 'HOOK', 'PRINCIPAL']);
-    const desarrolloVal = get(['DESARROLLO', 'BODY', 'CUERPO']);
-    const cierreVal = get(['CIERRE', 'CTA', 'CALL TO ACTION', 'CLOSING']);
+    const copyRaw = get(['COPY', 'TEXTO SUGERIDO', 'DESCRIPCION', 'DESCRIPTION']);
+
+    // Parse copy structure from a single column that contains "Copy principal: ... Desarrollo: ... Cierre: ..."
+    const parseCopyParts = (text: string) => {
+      const cp: { principal: string; desarrollo: string; cierre: string } = { principal: '', desarrollo: '', cierre: '' };
+      if (!text) return cp;
+      const lower = text.toLowerCase();
+      // Try to find labeled sections
+      const cpIdx = lower.search(/copy\s*principal\s*[:：]/i);
+      const devIdx = lower.search(/desarrollo\s*[:：]/i);
+      const clIdx = lower.search(/cierre\s*[:：]/i);
+      if (cpIdx >= 0 || devIdx >= 0 || clIdx >= 0) {
+        // We have at least one label — parse by positions
+        const markers = [
+          { key: 'principal' as const, idx: cpIdx, label: /copy\s*principal\s*[:：]\s*/i },
+          { key: 'desarrollo' as const, idx: devIdx, label: /desarrollo\s*[:：]\s*/i },
+          { key: 'cierre' as const, idx: clIdx, label: /cierre\s*[:：]\s*/i },
+        ].filter(m => m.idx >= 0).sort((a, b) => a.idx - b.idx);
+        markers.forEach((m, i) => {
+          const start = text.slice(m.idx).replace(m.label, '');
+          const nextIdx = markers[i + 1]?.idx;
+          const chunk = nextIdx !== undefined ? text.slice(m.idx, nextIdx) : text.slice(m.idx);
+          cp[m.key] = chunk.replace(m.label, '').trim();
+        });
+      }
+      return cp;
+    };
+
+    const parsed = parseCopyParts(copyRaw);
+    // Also check dedicated columns as fallback
+    let copyPrincipalVal = parsed.principal || get(['COPY PRINCIPAL', 'HOOK', 'PRINCIPAL']);
+    let desarrolloVal = parsed.desarrollo || get(['DESARROLLO', 'BODY', 'CUERPO']);
+    let cierreVal = parsed.cierre || get(['CIERRE', 'CTA', 'CALL TO ACTION', 'CLOSING']);
+    // Clean copy: if we parsed parts, reconstruct without labels
+    const copy = copyPrincipalVal ? `${copyPrincipalVal}${desarrolloVal ? '. ' + desarrolloVal : ''}${cierreVal ? '. ' + cierreVal : ''}` : copyRaw;
     const medio = get(['MEDIO', 'PLATAFORMA', 'PLATFORM']);
     const formato = get(['FORMATO DE ANUNCIO', 'FORMATO ANUNCIO', 'AD FORMAT']);
     const creativo = get(['CREATIVO', 'CREATIVE', 'TIPO']);
