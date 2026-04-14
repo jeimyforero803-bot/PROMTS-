@@ -50,10 +50,10 @@ export default function App() {
         'AUDIENCIA MACRO': c.audienciaMacro,
         'MICRO ELEGIDA': c.audienciaReferenciaElegida,
         'DRIVER': c.driverComunicacion,
-        'PROMPT F1 — IMAGEN': c.copyPrincipal ? JSON.stringify({ instruction: "Generate 5 variants of the reference creative. Each variant MUST follow this exact specification.", brand: { name: c.identifiedBrand, logo: "EXACT same logo — same position, size, colors. Zero modifications." }, layout: { structure: "IDENTICAL to reference — same hierarchy, positions, proportions.", background: "Change ONLY the background environment/scene.", character: "Different person, same pose energy and framing.", textPosition: "EXACT same position as reference.", logoPosition: "EXACT same corner/position as reference." }, typography: { font: "EXACT same font family, weight, size, color as reference.", text: c.copyPrincipal, spellingRule: "Render EXACTLY these characters including á é í ó ú ñ. Do NOT autocorrect.", style: "Same text effects as reference." }, colorPalette: "Match EXACTLY from reference.", graphicElements: "Same borders, frames, shapes, lines as reference.", variations: "Change ONLY: background, character, angle. Keep EVERYTHING else identical." }) : '',
-        'PROMPT F2 — IMAGEN': c.desarrollo ? JSON.stringify({ instruction: "Generate 5 variants of the reference creative. Each variant MUST follow this exact specification.", brand: { name: c.identifiedBrand, logo: "EXACT same logo — same position, size, colors. Zero modifications." }, layout: { structure: "IDENTICAL to reference.", background: "Change ONLY the background.", character: "Different person, same framing.", textPosition: "EXACT same position.", logoPosition: "EXACT same position." }, typography: { font: "EXACT same from reference.", text: c.desarrollo, spellingRule: "Render EXACTLY including á é í ó ú ñ. Do NOT autocorrect.", style: "Same effects as reference." }, colorPalette: "Match EXACTLY.", graphicElements: "Replicate exactly.", variations: "Change ONLY: background, character, angle." }) : '',
-        'PROMPT F3 — IMAGEN': c.cierre ? JSON.stringify({ instruction: "Generate 5 variants of the reference creative.", brand: { name: c.identifiedBrand, logo: "EXACT same logo." }, layout: { structure: "IDENTICAL to reference.", background: "Change ONLY background.", character: "Different person.", textPosition: "EXACT same.", logoPosition: "EXACT same." }, typography: { font: "EXACT same.", text: c.cierre, spellingRule: "Render EXACTLY including á é í ó ú ñ.", style: "Same as reference." }, colorPalette: "Match EXACTLY.", graphicElements: "Replicate.", variations: "Change ONLY: background, character, angle." }) : '',
-        'PROMPT VIDEO': c.copyPrincipal ? JSON.stringify({ instruction: "Generate a 15-second cinematic video ad using the reference creative as the EXACT visual template.", brand: { name: c.identifiedBrand, logo: "EXACT same logo — same position, proportions, colors in EVERY frame." }, globalRules: { colorPalette: "Match EXACTLY from reference throughout ALL frames.", typography: "EXACT same font family, weight, size, color. Never change.", graphicStyle: "Same borders, frames, shapes in every frame.", layout: "Text and logo positions IDENTICAL to reference." }, spelling: { rule: "ZERO TOLERANCE. Render each character one by one exactly as provided.", accents: "á é í ó ú ñ ü MUST appear. Missing accent = error.", forbidden: "Do NOT autocorrect, rephrase, translate, or rewrite." }, frames: [...(c.copyPrincipal ? [{ time: "0-4s", scene: "Bold opening — dynamic angle", text: c.copyPrincipal, textStyle: "Large, centered, bold. Same font as reference.", camera: "Close-up, slow push-in" }] : []), ...(c.desarrollo ? [{ time: "4-10s", scene: "Main narrative — product in action", text: c.desarrollo, textStyle: "Prominent, same position as reference.", camera: "Medium shot, gentle pan" }] : []), ...(c.cierre ? [{ time: "10-13s", scene: "Resolution — product hero", text: c.cierre, textStyle: "Impactful, same style.", camera: "Wide or close-up" }] : []), { time: "13-15s", scene: "End card", text: `Logo ${c.identifiedBrand}`, textStyle: "Centered on brand color background.", camera: "Static" }], cinematography: { lighting: "Warm, natural. Match brand mood.", transitions: "Smooth — fade, slide, dissolve.", textAnimation: "Fade-in or slide-up, hold steady." } }) : '',
+        'PROMPT F1 — IMAGEN': c.copyPrincipal ? JSON.stringify({ task: "Generate 5 variants of the attached reference image.", antiHallucination: { brandName: `The brand is "${c.identifiedBrand}" and ONLY "${c.identifiedBrand}". Do NOT invent alternative brand names, logos, or taglines.`, logoRule: "Copy the logo PIXEL BY PIXEL from reference. Same text, font, colors, position, size.", textRule: "ONLY the text specified below. Do NOT generate or invent any other text." }, text: { content: c.copyPrincipal, spelling: "Write CHARACTER BY CHARACTER. Every accent (á é í ó ú ñ) mandatory. Do NOT misspell or modify.", position: "EXACT same position and style as reference.", font: "EXACT same font family, weight, color, effects as reference." }, layout: "IDENTICAL to reference. Change ONLY background and person.", colorPalette: "EXACT same colors as reference.", whatToChange: "ONLY background environment and person. Everything else IDENTICAL." }) : '',
+        'PROMPT F2 — IMAGEN': c.desarrollo ? JSON.stringify({ task: "Generate 5 variants of the attached reference image.", antiHallucination: { brandName: `ONLY "${c.identifiedBrand}". NO invented names.`, logoRule: "PIXEL BY PIXEL from reference.", textRule: "ONLY text below." }, text: { content: c.desarrollo, spelling: "CHARACTER BY CHARACTER. Accents mandatory.", position: "EXACT same as reference.", font: "EXACT same as reference." }, layout: "IDENTICAL. Change ONLY background and person.", colorPalette: "EXACT match.", whatToChange: "ONLY background and person." }) : '',
+        'PROMPT F3 — IMAGEN': c.cierre ? JSON.stringify({ task: "Generate 5 variants of the attached reference image.", antiHallucination: { brandName: `ONLY "${c.identifiedBrand}".`, logoRule: "PIXEL BY PIXEL.", textRule: "ONLY text below." }, text: { content: c.cierre, spelling: "CHARACTER BY CHARACTER. Accents mandatory.", position: "EXACT same.", font: "EXACT same." }, layout: "IDENTICAL. Change ONLY background and person.", whatToChange: "ONLY background and person." }) : '',
+        'PROMPT VIDEO': c.copyPrincipal ? JSON.stringify({ task: `15-second video ad for "${c.identifiedBrand}". ALL copy displayed sequentially. Reference image = visual template.`, antiHallucination: { brandName: `ONLY "${c.identifiedBrand}". Do NOT invent alternative names or logos.`, logoRule: "FIXED element in EVERY frame. Same text, font, colors, proportions.", textRule: "ONLY text in frames[]. Do NOT add or invent ANY other text." }, spelling: { method: "Spell each word letter by letter before rendering. Accents (á é í ó ú ñ) MANDATORY.", forbidden: "Do NOT autocorrect, rephrase, translate, or modify." }, brandIdentity: { colors: "EXACT palette from reference throughout ALL 15s.", typography: "EXACT same font for all text.", logo: "Same position as reference in EVERY frame." }, frames: [...(c.copyPrincipal ? [{ time: "0-4s", text: c.copyPrincipal, visual: "Dynamic opening, text large and centered." }] : []), ...(c.desarrollo ? [{ time: "4-10s", text: c.desarrollo, visual: "Product narrative, text prominent." }] : []), ...(c.cierre ? [{ time: "10-13s", text: c.cierre, visual: "Product hero, text impactful." }] : []), { time: "13-15s", text: `${c.identifiedBrand} logo`, visual: "Clean end card." }], consistency: "Same colors, font, style ALL 15s. One cohesive ad." }) : '',
         'PROMPT RESIZE': c.resizePrompt,
       };
     });
@@ -894,57 +894,58 @@ export default function App() {
                           { label: 'FRAME 3 — Cierre', color: 'amber', text: cl, timing: '9-13s' },
                         ].filter(f => f.text);
 
-                        const imgPromptJson = (text: string) => JSON.stringify({
-                          instruction: "Generate 5 variants of the reference creative. Each variant MUST follow this exact specification.",
-                          brand: { name: brand, logo: "EXACT same logo from reference — same position, same size, same colors. Zero modifications." },
-                          layout: {
-                            structure: "IDENTICAL to reference — same visual hierarchy, same element positions, same proportions.",
-                            background: "Change ONLY the background environment/scene. Different setting per variant.",
-                            character: "Different person in each variant, same pose energy and framing as reference.",
-                            textPosition: "EXACT same position as in the reference creative. Do not move text blocks.",
-                            logoPosition: "EXACT same corner/position as reference."
+                        const imgPrompt = (text: string) => JSON.stringify({
+                          task: "Generate 5 variants of the attached reference image.",
+                          antiHallucination: {
+                            brandName: `The brand is "${brand}" and ONLY "${brand}". Do NOT invent, replace, or create alternative brand names, product names, logos, or taglines. If the reference says "${brand}", every variant MUST say "${brand}" — never "ASCEND", "ELITE", "FREEDOM", or any invented name.`,
+                            logoRule: "Copy the logo PIXEL BY PIXEL from the reference. Same exact text, same font, same colors, same position, same size. The logo is a FIXED IMAGE — do not recreate or reinterpret it.",
+                            textRule: `The ONLY text allowed is exactly what is specified below. Do NOT generate, invent, or add any other text, slogan, or tagline that is not explicitly listed here.`
                           },
-                          typography: {
-                            font: "EXACT same font family, weight, size, and color as reference creative.",
-                            text: text,
-                            spellingRule: "Render EXACTLY these characters, one by one. Including accents: á é í ó ú ñ. Do NOT autocorrect or rephrase.",
-                            style: "Same text effects as reference (shadow, outline, color overlay). Do NOT change."
+                          text: {
+                            content: text,
+                            spelling: `Write this text CHARACTER BY CHARACTER exactly as shown. The word "energía" has 7 letters: e-n-e-r-g-í-a. The word "bienestar" has 9 letters: b-i-e-n-e-s-t-a-r. Do NOT misspell, invent, or modify ANY word. Every accent mark (á é í ó ú ñ) is mandatory.`,
+                            position: "EXACT same position, size, and style as in the reference image.",
+                            font: "EXACT same font family, weight, color, and effects (shadow/outline) as reference."
                           },
-                          colorPalette: "Extract and match EXACTLY from reference: primary, secondary, accent, background colors.",
-                          graphicElements: "Same borders, frames, shapes, decorative lines as reference. Replicate exactly.",
-                          variations: "Change ONLY: background scene, character/person, camera angle. Keep EVERYTHING else identical."
+                          layout: "IDENTICAL to reference — same visual hierarchy, same element positions. The ONLY things that change are: background scene and the person/character.",
+                          colorPalette: "EXACT same colors as reference. Do NOT shift, brighten, desaturate, or modify any color.",
+                          whatToChange: "ONLY the background environment and the person. Everything else (logo, text, colors, layout, graphic elements, borders, shapes) stays IDENTICAL."
                         }, null, 2);
 
-                        const imgPrompt = (text: string) => imgPromptJson(text);
+                        const fullCopy = [cp, dev, cl].filter(Boolean).join(' | ');
 
-                        const videoPromptJson = JSON.stringify({
-                          instruction: "Generate a 15-second cinematic video ad using the reference creative as the EXACT visual template.",
-                          brand: { name: brand, logo: "EXACT same logo — same position, proportions, colors in EVERY frame." },
-                          globalRules: {
-                            colorPalette: "Match EXACTLY from reference. Same primary, secondary, accent colors throughout ALL frames.",
-                            typography: "EXACT same font family, weight, size, color as reference. Never change across frames.",
-                            graphicStyle: "Same borders, frames, shapes, decorative elements as reference in every frame.",
-                            layout: "Text and logo positions IDENTICAL to reference in every frame."
+                        const videoPrompt = JSON.stringify({
+                          task: `Generate a single 15-second video ad for "${brand}" that displays ALL the copy text sequentially. Use the attached reference image as the EXACT visual template for brand identity.`,
+                          antiHallucination: {
+                            brandName: `The brand is "${brand}" and ONLY "${brand}". Do NOT invent alternative brand names, logos, or product names at any point in the video. Every frame must show "${brand}" — never any other name.`,
+                            logoRule: "The logo from the reference must appear EXACTLY as-is in every frame — same text, same font, same colors, same proportions. It is a FIXED element.",
+                            textRule: "The ONLY text that may appear on screen is what is specified in the frames array below. Do NOT add, invent, or generate ANY other text."
                           },
                           spelling: {
-                            rule: "ZERO TOLERANCE. Render each character one by one exactly as provided.",
-                            accents: "á é í ó ú ñ ü MUST appear exactly. Missing accent = error.",
-                            forbidden: "Do NOT autocorrect, rephrase, translate, abbreviate, or rewrite any text."
+                            method: "For EACH word, spell it out mentally letter by letter before rendering. Example: 'energía' = e-n-e-r-g-í-a (7 chars). 'bienestar' = b-i-e-n-e-s-t-a-r (9 chars). 'rendimiento' = r-e-n-d-i-m-i-e-n-t-o (11 chars).",
+                            accents: "á é í ó ú ñ are MANDATORY where they appear. A missing accent is a spelling error.",
+                            forbidden: "Do NOT autocorrect, rephrase, abbreviate, translate, or modify any word. The text is FINAL and LOCKED."
+                          },
+                          brandIdentity: {
+                            colors: "EXACT same color palette as reference throughout ALL 15 seconds. No shifts, no new colors.",
+                            typography: "EXACT same font from reference for all on-screen text. Same weight, same size ratio, same color.",
+                            graphicElements: "Same borders, frames, shapes, decorative lines as reference in every frame.",
+                            logo: "Visible in same position as reference in EVERY frame."
                           },
                           frames: [
-                            ...(cp ? [{ time: "0-4s", scene: "Bold opening — dynamic angle, attention-grabbing", text: cp, textStyle: "Large, centered, bold. Same font and color as reference.", camera: "Close-up or low angle, slow push-in", transition: "Fade in" }] : []),
-                            ...(dev ? [{ time: "4-10s", scene: "Main narrative — product/brand in action, human connection", text: dev, textStyle: "Clean, prominent, same position as reference.", camera: "Medium shot, gentle pan or dolly", transition: "Smooth cut" }] : []),
-                            ...(cl ? [{ time: "10-13s", scene: "Resolution — product hero moment", text: cl, textStyle: "Impactful, same style as reference.", camera: "Wide or product close-up", transition: "Smooth cut" }] : []),
-                            { time: "13-15s", scene: "End card", text: `Logo ${brand}`, textStyle: "Logo centered on brand primary color background.", camera: "Static, clean", transition: "Fade to end card" }
+                            ...(cp ? [{ time: "0-4s", text: cp, visual: "Dynamic opening scene with energy — person in action. Text appears large and centered with the EXACT font from reference. Slow camera push-in.", textAnimation: "Smooth fade-in, hold steady." }] : []),
+                            ...(dev ? [{ time: "4-10s", text: dev, visual: "Product/brand narrative moment — human connection, aspirational setting. Text transitions smoothly from previous frame. Same font, same style.", textAnimation: "Slide-up or crossfade from previous text." }] : []),
+                            ...(cl ? [{ time: "10-13s", text: cl, visual: "Product hero moment — clean composition. Text appears prominently. Same font, same style.", textAnimation: "Fade-in, hold steady." }] : []),
+                            { time: "13-15s", text: `${brand} logo`, visual: "Clean end card — logo centered on brand primary color background. No other text.", textAnimation: "Static." }
                           ],
                           cinematography: {
-                            lighting: "Warm, natural. Match brand mood from reference.",
-                            transitions: "Smooth — no abrupt cuts. Fade-in, slide, or dissolve.",
-                            textAnimation: "Fade-in or slide-up. Hold steady for full frame duration."
+                            style: "Cinematic, professional. Smooth transitions only (dissolve, crossfade, gentle cut). No abrupt jumps.",
+                            lighting: "Warm, natural, matching brand mood from reference.",
+                            consistency: "The visual style, color grading, and brand elements must be IDENTICAL across all 15 seconds. It must look like ONE cohesive ad, not 4 separate clips."
                           }
                         }, null, 2);
 
-                        const videoPrompt = videoPromptJson;
+                        const resizePrompt = creative.resizePrompt;
 
                         const colorMap: Record<string, string> = { blue: 'text-blue-400', emerald: 'text-emerald-400', amber: 'text-amber-400' };
                         const borderMap: Record<string, string> = { blue: 'border-blue-500/30', emerald: 'border-emerald-500/30', amber: 'border-amber-500/30' };
@@ -969,15 +970,17 @@ export default function App() {
                                   </div>
                                   <div className="bg-stone-900 border-t border-stone-700 p-4 text-xs text-stone-300 leading-relaxed font-mono whitespace-pre-wrap overflow-x-auto">
                                     <span className="text-purple-400">{'{\n'}</span>
-                                    <span className="text-stone-500">  "instruction": </span><span className="text-amber-300">"Generate 5 variants of the reference creative..."</span><span className="text-stone-400">,{'\n'}</span>
-                                    <span className="text-stone-500">  "brand": </span><span className="text-stone-400">{'{ '}</span><span className="text-stone-500">"name": </span><span className="text-green-400 font-bold">"{brand}"</span><span className="text-stone-400">{' },\n'}</span>
-                                    <span className="text-stone-500">  "layout": </span><span className="text-stone-400">{'{ "structure": "IDENTICAL to reference" },\n'}</span>
-                                    <span className="text-stone-500">  "typography": </span><span className="text-stone-400">{'{\n'}</span>
-                                    <span className="text-stone-500">    "font": </span><span className="text-stone-400">"EXACT same from reference",{'\n'}</span>
-                                    <span className="text-stone-500">    "text": </span><span className={`font-bold ${colorMap[f.color]}`}>"{f.text}"</span><span className="text-stone-400">,{'\n'}</span>
-                                    <span className="text-stone-500">    "spellingRule": </span><span className="text-red-400">"Render EXACTLY, including á é í ó ú ñ"</span><span className="text-stone-400">{'\n'}</span>
+                                    <span className="text-stone-500">  "task": </span><span className="text-amber-300">"Generate 5 variants of reference"</span><span className="text-stone-400">,{'\n'}</span>
+                                    <span className="text-red-400 font-bold">  "antiHallucination"</span><span className="text-stone-400">: {'{\n'}</span>
+                                    <span className="text-stone-500">    "brandName": </span><span className="text-stone-400">"ONLY </span><span className="text-green-400 font-bold">{brand}</span><span className="text-stone-400">. NO invented names.",{'\n'}</span>
+                                    <span className="text-stone-500">    "logoRule": </span><span className="text-stone-400">"Copy PIXEL BY PIXEL from reference.",{'\n'}</span>
+                                    <span className="text-stone-500">    "textRule": </span><span className="text-stone-400">"ONLY text listed below. NO inventions."{'\n'}</span>
                                     <span className="text-stone-400">{'  },\n'}</span>
-                                    <span className="text-stone-500">  "variations": </span><span className="text-amber-300">"Change ONLY: background, character, angle"</span>{'\n'}
+                                    <span className="text-stone-500">  "text": </span><span className="text-stone-400">{'{\n'}</span>
+                                    <span className="text-stone-500">    "content": </span><span className={`font-bold ${colorMap[f.color]}`}>"{f.text}"</span><span className="text-stone-400">,{'\n'}</span>
+                                    <span className="text-stone-500">    "spelling": </span><span className="text-red-400">"CHARACTER BY CHARACTER. Accents mandatory."</span><span className="text-stone-400">{'\n'}</span>
+                                    <span className="text-stone-400">{'  },\n'}</span>
+                                    <span className="text-stone-500">  "whatToChange": </span><span className="text-amber-300">"ONLY background + person. Rest IDENTICAL."</span>{'\n'}
                                     <span className="text-purple-400">{'}'}</span>
                                   </div>
                                 </div>
@@ -997,10 +1000,13 @@ export default function App() {
                               </div>
                               <div className="bg-stone-900 border-t border-stone-700 p-4 text-xs text-stone-300 leading-relaxed font-mono whitespace-pre-wrap overflow-x-auto">
                                 <span className="text-purple-400">{'{\n'}</span>
-                                <span className="text-stone-500">  "instruction": </span><span className="text-amber-300">"15s cinematic video ad from reference template"</span><span className="text-stone-400">,{'\n'}</span>
-                                <span className="text-stone-500">  "brand": </span><span className="text-stone-400">{'{ '}</span><span className="text-stone-500">"name": </span><span className="text-green-400 font-bold">"{brand}"</span><span className="text-stone-400">{' },\n'}</span>
-                                <span className="text-stone-500">  "globalRules": </span><span className="text-stone-400">{'{ palette, font, layout: "IDENTICAL to reference" },\n'}</span>
-                                <span className="text-red-400 font-bold">  "spelling": </span><span className="text-stone-400">{'{ "rule": "ZERO TOLERANCE — character by character, including á é í ó ú ñ" },\n'}</span>
+                                <span className="text-stone-500">  "task": </span><span className="text-amber-300">"15s video — ALL copy in 1 video"</span><span className="text-stone-400">,{'\n'}</span>
+                                <span className="text-red-400 font-bold">  "antiHallucination"</span><span className="text-stone-400">: {'{\n'}</span>
+                                <span className="text-stone-500">    "brandName": </span><span className="text-stone-400">"ONLY </span><span className="text-green-400 font-bold">{brand}</span><span className="text-stone-400">. NO invented names.",{'\n'}</span>
+                                <span className="text-stone-500">    "logoRule": </span><span className="text-stone-400">"FIXED element, every frame.",{'\n'}</span>
+                                <span className="text-stone-500">    "textRule": </span><span className="text-stone-400">"ONLY text in frames[]. NO inventions."{'\n'}</span>
+                                <span className="text-stone-400">{'  },\n'}</span>
+                                <span className="text-red-400 font-bold">  "spelling"</span><span className="text-stone-400">: "Letter by letter. á é í ó ú ñ mandatory.",{'\n'}</span>
                                 <span className="text-stone-500">  "frames": </span><span className="text-stone-400">{'[\n'}</span>
                                 {cp && <>
                                   <span className="text-stone-400">{'    { '}</span>
@@ -1023,7 +1029,8 @@ export default function App() {
                                 <span className="text-stone-400">{'    { '}</span>
                                 <span className="text-stone-500">"13-15s"</span><span className="text-stone-400">{': "Logo '}</span>
                                 <span className="text-green-400 font-bold">{brand}</span>
-                                <span className="text-stone-400">{' centered" }\n  ]\n'}</span>
+                                <span className="text-stone-400">{' centered" }\n  ],\n'}</span>
+                                <span className="text-stone-500">  "consistency": </span><span className="text-amber-300">"Same colors, font, style ALL 15s. One cohesive ad."</span>{'\n'}
                                 <span className="text-purple-400">{'}'}</span>
                               </div>
                             </div>
