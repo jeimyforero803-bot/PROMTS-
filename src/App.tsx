@@ -61,6 +61,68 @@ export default function App() {
     XLSX.writeFile(wb, exportName);
   };
 
+  // Helper: find a header column by keywords (case-insensitive, partial match)
+  const findCol = (headers: string[], keywords: string[]): string | null => {
+    return headers.find(h => {
+      const up = h.toUpperCase().trim();
+      return keywords.some(k => up.includes(k));
+    }) || null;
+  };
+
+  // Build a creative locally from existing row data (no AI needed)
+  const buildLocalCreative = (row: Record<string, string>, headers: string[], idx: number, brand: string): CreativeSpec => {
+    const get = (keywords: string[]) => {
+      const col = findCol(headers, keywords);
+      return col ? (row[col] || '').trim() : '';
+    };
+
+    const title = get(['TÍTULO', 'TITULO', 'TITLE', 'HEADLINE']);
+    const copy = get(['COPY', 'TEXTO SUGERIDO', 'DESCRIPCION', 'DESCRIPTION']);
+    const medio = get(['MEDIO', 'PLATAFORMA', 'PLATFORM']);
+    const formato = get(['FORMATO DE ANUNCIO', 'FORMATO ANUNCIO', 'AD FORMAT']);
+    const creativo = get(['CREATIVO', 'CREATIVE', 'TIPO']);
+    const size = get(['TAMAÑO', 'SIZE', 'PIXELES', 'DIMENSIONES']);
+    const fileFormat = get(['FORMATO', 'FORMAT', 'JPG', 'PNG']);
+    const peso = get(['PESO', 'WEIGHT']);
+    const textoSpec = get(['TEXTO', 'CARACTERES', 'CHAR']);
+    const objetivo = get(['OBJETIVO', 'OBJECTIVE']);
+    const geo = get(['GEOGRAFIA', 'GEO', 'UBICACIÓN']);
+    const audMacro = get(['AUDIENCIAS', 'AUDIENCIA MACRO', 'AUDIENCE']);
+    const audRef = get(['AUDIENCIAS REFERENCIA', 'REFERENCIA', 'MICRO']);
+    const driver = get(['DRIVER', 'DRIVERS', 'COMUNICACIÓN']);
+    const concepto = get(['CONCEPTO', 'CONCEPT']);
+    const campana = get(['CAMPAÑA', 'CAMPAIGN']);
+
+    const context = `Audiencia: ${audMacro || 'General'} | Objetivo: ${objetivo || 'Awareness'} | Campaña: ${campana || concepto || 'N/A'}`;
+
+    return {
+      id: `creative-${idx + 1}`,
+      identifiedBrand: brand,
+      medio,
+      formatoAnuncio: formato,
+      creativo,
+      formatAndSize: size,
+      formato: fileFormat,
+      peso,
+      textoSpec,
+      maxTitleChars: 40,
+      maxCopyChars: 200,
+      objetivo,
+      geografia: geo,
+      audienciaMacro: audMacro,
+      audienciaReferencia: audRef,
+      audienciaReferenciaElegida: audRef.split(',')[0]?.trim() || '',
+      driverComunicacion: driver,
+      campaignContext: context,
+      suggestedTitle: title || concepto || '',
+      suggestedCopy: copy || '',
+      brandGuidelines: '',
+      masterPromptEn: `take as a reference this creative and generate 5 different variants with this image. respect the logo 100% faithful and the identity of the brand ${brand}. change the background environment and the character to: ${context}. take the same font and Include the exact text '${title || concepto || ''}' and '${copy || ''}' ensuring flawless spelling. be faithful to the initial logo and the graphic lines.`,
+      masterPromptEs: `toma como referencia esta pieza creativa y genera 5 variantes diferentes con esta imagen. respeta el logo 100% fiel y la identidad de la marca ${brand}. cambia el entorno del fondo y el personaje a: ${context}. usa la misma tipografía e incluye el texto exacto '${title || concepto || ''}' y '${copy || ''}' asegurando ortografía impecable. sé fiel al logo inicial y a las líneas gráficas.`,
+      resizePrompt: size ? `Resize this creative from its original dimensions to ${size}. Extend the background naturally using outpainting. Keep all text, logos, and key elements in the same position. Maintain brand identity of ${brand}.` : '',
+    };
+  };
+
   const handleAnalyze = async () => {
     if (!inputText.trim()) return;
 
@@ -78,7 +140,6 @@ export default function App() {
       if (rows.length > 0) {
         headers = Object.keys(rows[0]);
       } else {
-        // Fallback: parse from text input
         const lines = inputText.split('\n').filter(l => l.trim().length > 0 && !l.startsWith('[Nombre'));
         if (lines.length < 2) throw new Error("No se encontraron datos suficientes.");
         headers = lines[0].split('\t').length > 1 ? lines[0].split('\t') : lines[0].split(',');
@@ -90,59 +151,76 @@ export default function App() {
         });
       }
 
-      const BATCH_SIZE = 10;
-      const totalRows = rows.length;
-      const allCreatives: CreativeSpec[] = [];
-      let failures = 0;
+      // Detect if file already has COPY/TITLE columns with content
+      const copyCol = findCol(headers, ['COPY', 'TEXTO SUGERIDO', 'DESCRIPCION']);
+      const titleCol = findCol(headers, ['TÍTULO', 'TITULO', 'TITLE', 'HEADLINE', 'CONCEPTO']);
 
-      // Build header line (tab-separated, clean)
-      const headerLine = headers.join('\t');
+      const hasExistingCopy = copyCol && rows.filter(r => r[copyCol]?.trim().length > 0).length > rows.length * 0.3;
+      const hasExistingTitle = titleCol && rows.filter(r => r[titleCol]?.trim().length > 0).length > rows.length * 0.3;
 
-      for (let i = 0; i < rows.length; i += BATCH_SIZE) {
-        const batch = rows.slice(i, i + BATCH_SIZE);
-        const batchNum = Math.floor(i / BATCH_SIZE) + 1;
-        const totalBatches = Math.ceil(rows.length / BATCH_SIZE);
-        const from = i + 1;
-        const to = Math.min(i + batch.length, totalRows);
+      if (hasExistingCopy || hasExistingTitle) {
+        // FILE ALREADY HAS COPY/TITLE — generate prompts locally without AI
+        setProgress('Archivo con copy existente detectado — generando prompts directamente...');
 
-        setProgress(`Lote ${batchNum}/${totalBatches} — filas ${from}-${to} de ${totalRows} (${allCreatives.length} generadas)`);
+        // Extract brand from filename
+        const brandMatch = fileName.match(/^([^-_]+)/);
+        const brand = brandMatch ? brandMatch[1].replace(/[^a-záéíóúñ\s]/gi, '').trim() : 'Marca';
 
-        // Convert batch rows to clean tab-separated text (no newlines inside cells)
-        const batchLines = batch.map(row =>
-          headers.map(h => String(row[h] || '').replace(/[\n\r]+/g, ' ')).join('\t')
-        );
+        const allCreatives = rows.map((row, i) => buildLocalCreative(row, headers, i, brand));
+        setCreatives(allCreatives);
+        setProgress('');
+      } else {
+        // NO EXISTING COPY — use AI to generate
+        const BATCH_SIZE = 10;
+        const totalRows = rows.length;
+        const allCreatives: CreativeSpec[] = [];
+        let failures = 0;
+        const headerLine = headers.join('\t');
 
-        // Build creative context block from user notes + uploaded text files
-        let contextBlock = '';
-        if (contextText.trim() || contextFiles.length > 0) {
-          const parts: string[] = [];
-          if (contextText.trim()) parts.push(`NOTAS DEL EQUIPO CREATIVO:\n${contextText.trim()}`);
-          contextFiles.forEach(f => {
-            if (f.type === 'text') parts.push(`ARCHIVO DE REFERENCIA (${f.name}):\n${f.content.slice(0, 5000)}`);
-            if (f.type === 'image') parts.push(`[Imagen de referencia adjunta: ${f.name}]`);
-          });
-          contextBlock = `\n\nCONTEXTO CREATIVO ADICIONAL (usa esta información para generar copys más relevantes y alineados):\n${parts.join('\n\n')}`;
+        for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+          const batch = rows.slice(i, i + BATCH_SIZE);
+          const batchNum = Math.floor(i / BATCH_SIZE) + 1;
+          const totalBatches = Math.ceil(rows.length / BATCH_SIZE);
+          const from = i + 1;
+          const to = Math.min(i + batch.length, totalRows);
+
+          setProgress(`Lote ${batchNum}/${totalBatches} — filas ${from}-${to} de ${totalRows} (${allCreatives.length} generadas)`);
+
+          const batchLines = batch.map(row =>
+            headers.map(h => String(row[h] || '').replace(/[\n\r]+/g, ' ')).join('\t')
+          );
+
+          let contextBlock = '';
+          if (contextText.trim() || contextFiles.length > 0) {
+            const parts: string[] = [];
+            if (contextText.trim()) parts.push(`NOTAS DEL EQUIPO CREATIVO:\n${contextText.trim()}`);
+            contextFiles.forEach(f => {
+              if (f.type === 'text') parts.push(`ARCHIVO DE REFERENCIA (${f.name}):\n${f.content.slice(0, 5000)}`);
+              if (f.type === 'image') parts.push(`[Imagen de referencia adjunta: ${f.name}]`);
+            });
+            contextBlock = `\n\nCONTEXTO CREATIVO ADICIONAL (usa esta información para generar copys más relevantes y alineados):\n${parts.join('\n\n')}`;
+          }
+
+          const batchText = `${fileCtx}${contextBlock}\n${headerLine}\n${batchLines.join('\n')}`;
+
+          try {
+            const specs = await extractAndOptimizePrompts(batchText);
+            specs.forEach((s, idx) => { s.id = `creative-${allCreatives.length + idx + 1}`; });
+            allCreatives.push(...specs);
+            setCreatives([...allCreatives]);
+          } catch (err: any) {
+            console.error(`Batch ${batchNum} failed:`, err);
+            failures++;
+          }
         }
 
-        const batchText = `${fileCtx}${contextBlock}\n${headerLine}\n${batchLines.join('\n')}`;
-
-        try {
-          const specs = await extractAndOptimizePrompts(batchText);
-          specs.forEach((s, idx) => { s.id = `creative-${allCreatives.length + idx + 1}`; });
-          allCreatives.push(...specs);
-          setCreatives([...allCreatives]);
-        } catch (err: any) {
-          console.error(`Batch ${batchNum} failed:`, err);
-          failures++;
+        setProgress('');
+        if (allCreatives.length === 0) {
+          throw new Error("No se generaron creatividades. Revisa el formato del archivo.");
         }
-      }
-
-      setProgress('');
-      if (allCreatives.length === 0) {
-        throw new Error("No se generaron creatividades. Revisa el formato del archivo.");
-      }
-      if (failures > 0) {
-        setError(`Se completaron ${allCreatives.length} de ${totalRows} filas. ${failures} lotes fallaron.`);
+        if (failures > 0) {
+          setError(`Se completaron ${allCreatives.length} de ${totalRows} filas. ${failures} lotes fallaron.`);
+        }
       }
     } catch (err: any) {
       setError(err.message || "Error al analizar las especificaciones.");
