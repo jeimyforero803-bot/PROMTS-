@@ -50,10 +50,10 @@ export default function App() {
         'AUDIENCIA MACRO': c.audienciaMacro,
         'MICRO ELEGIDA': c.audienciaReferenciaElegida,
         'DRIVER': c.driverComunicacion,
-        'PROMPT F1 — COPY PRINCIPAL': c.copyPrincipal ? `Take as a reference this creative and generate 5 different variants for ${c.identifiedBrand}. Respect the logo 100% faithful. Reproduce product with photographic fidelity. Use brand color palette only. Same font family. Include the exact text '${c.copyPrincipal}' — prominent, large, main visual element. Context: ${c.campaignContext}. Flawless Spanish spelling.` : '',
-        'PROMPT F2 — DESARROLLO': c.desarrollo ? `Take as a reference this creative and generate 5 different variants for ${c.identifiedBrand}. Respect the logo 100% faithful. Reproduce product with photographic fidelity. Use brand color palette only. Same font family. Include the exact text '${c.desarrollo}' — secondary text supporting the visual hierarchy, with product benefit visible. Context: ${c.campaignContext}. Flawless Spanish spelling.` : '',
-        'PROMPT F3 — CIERRE': c.cierre ? `Take as a reference this creative and generate 5 different variants for ${c.identifiedBrand}. Respect the logo 100% faithful. Reproduce product with photographic fidelity. Use brand color palette only. Same font family. Include the exact text '${c.cierre}' — short, direct CTA with logo and product prominent. Context: ${c.campaignContext}. Flawless Spanish spelling.` : '',
-        'PROMPT VIDEO': c.copyPrincipal ? `Generate a 15-second video sequence for ${c.identifiedBrand}. Respect logo, product, brand colors, typography 100%. FRAMES: F1 (0-3s) Hook: '${c.copyPrincipal}' — large, attention-grabbing. F2 (3-9s) Body: '${c.desarrollo || ''}' — product benefit visible. F3 (9-13s) CTA: '${c.cierre || ''}' — direct call to action. F4 (13-15s) Packshot: logo + product. Fluid transitions, consistent style. Context: ${c.campaignContext}. Flawless Spanish.` : '',
+        'PROMPT F1 — COPY PRINCIPAL': c.copyPrincipal ? `LOOK at the reference image. Generate 5 variants that replicate the EXACT visual identity — same layout, logo position, background colors, typography style, graphic elements. ONLY change the person/character and setting. Include the EXACT text '${c.copyPrincipal}' as the HERO headline — large, bold, same font style as reference. Brand: ${c.identifiedBrand}. Context: ${c.campaignContext}. Flawless Spanish.` : '',
+        'PROMPT F2 — DESARROLLO': c.desarrollo ? `LOOK at the reference image. Generate 5 variants that replicate the EXACT visual identity — same layout, logo position, background colors, typography style, graphic elements. ONLY change the person/character and setting. Include the EXACT text '${c.desarrollo}' as supporting body text — smaller than headline, same font, product benefit visible. Brand: ${c.identifiedBrand}. Context: ${c.campaignContext}. Flawless Spanish.` : '',
+        'PROMPT F3 — CIERRE': c.cierre ? `LOOK at the reference image. Generate 5 variants that replicate the EXACT visual identity — same layout, logo position, background colors, typography style, graphic elements. ONLY change the person/character and setting. Include the EXACT text '${c.cierre}' as CTA — short, direct, with logo and product prominent. Brand: ${c.identifiedBrand}. Context: ${c.campaignContext}. Flawless Spanish.` : '',
+        'PROMPT VIDEO': c.copyPrincipal ? `WATCH the reference image. Create a 15-second video for ${c.identifiedBrand} maintaining the EXACT SAME visual identity in every frame — layout, logo, colors, typography, graphic elements. FRAMES: F1 (0-3s) Hook: '${c.copyPrincipal}' — large, attention-grabbing. F2 (3-9s) Body: '${c.desarrollo || ''}' — product benefit visible. F3 (9-13s) CTA: '${c.cierre || ''}' — direct call to action. F4 (13-15s) Packshot: logo + product centered. Smooth transitions, consistent style. Context: ${c.campaignContext}. Flawless Spanish.` : '',
         'PROMPT RESIZE': c.resizePrompt,
       };
     });
@@ -887,15 +887,15 @@ export default function App() {
                         const cp = creative.copyPrincipal || creative.suggestedTitle || '';
                         const dev = creative.desarrollo || '';
                         const cl = creative.cierre || '';
-                        const baseRules = `Respect the logo 100% faithful — same size, position, colors and proportions. NEVER modify, distort or relocate it. If there is a visible product (packaging, bottle, box), reproduce it with photographic fidelity — exact colors, legible label, correct shape. Use exclusively the brand color palette of ${brand}. Use the same font family, weight and style. Flawless spelling in Spanish — correct tildes, punctuation and coherence.`;
+                        const baseRules = `ANALYZE the reference image attached and REPLICATE its EXACT visual identity. This is CRITICAL — the output must look like it was made by the same designer:\n\n1. LAYOUT & COMPOSITION: Copy the EXACT same layout structure — where the logo sits, where the text blocks are, where the photo/character is placed, the proportions between elements. Do NOT reinvent the composition.\n2. BACKGROUND & COLORS: Use the EXACT same background color, gradients, textures and color palette from the reference. If the reference has a solid red background, the variant MUST have a solid red background. NEVER change the dominant color scheme.\n3. LOGO: Keep the ${brand} logo in the EXACT same position, size and style as the reference. Do NOT move it, resize it, or alter it in any way. The logo must be pixel-perfect.\n4. PRODUCT: If a product (bottle, box, packaging) appears in the reference, reproduce it with photographic fidelity in the same position — exact colors, legible label, correct shape and proportions.\n5. TYPOGRAPHY: Use the EXACT same font family, weight (bold/italic), size hierarchy, color and text alignment as the reference. If the reference uses bold italic white text on red, the variant MUST use bold italic white text on red.\n6. GRAPHIC ELEMENTS: Reproduce all graphic lines, shapes, borders, frames, overlays and decorative elements from the reference. These define the brand identity.\n7. PHOTO STYLE: Match the reference's photography style — same crop, lighting mood, color grading. Only change the specific person/character and setting, keeping the same photographic treatment.\n8. SPELLING: Flawless Spanish — correct tildes (é, á, í, ó, ú, ñ), punctuation, no typos. Double-check every word.`;
 
                         const frames = [
-                          { label: 'FRAME 1 — Copy Principal (Hook)', color: 'blue', text: cp, desc: 'This is the opening frame / hero visual. The text must be prominent, large, and attention-grabbing.', timing: '0-3s' },
-                          { label: 'FRAME 2 — Desarrollo (Body)', color: 'emerald', text: dev, desc: 'This is the body frame showing product benefit or reason-to-believe. Text is secondary, supporting the hook.', timing: '3-9s' },
-                          { label: 'FRAME 3 — Cierre (CTA)', color: 'amber', text: cl, desc: 'This is the closing frame with call to action. Text is short, direct, actionable. Logo and product must be prominent.', timing: '9-15s' },
+                          { label: 'FRAME 1 — Copy Principal (Hook)', color: 'blue', text: cp, desc: 'This is the HERO text — the first thing the viewer reads. It must be the LARGEST text element, using the same bold/italic style as the reference. Position it exactly where the main headline sits in the reference image.', timing: '0-3s' },
+                          { label: 'FRAME 2 — Desarrollo (Body)', color: 'emerald', text: dev, desc: 'This is the supporting body text. It should be SMALLER than the hook, positioned below or beside it following the reference layout. Shows product benefit. Keep the same font but at a smaller size, matching the reference hierarchy.', timing: '3-9s' },
+                          { label: 'FRAME 3 — Cierre (CTA)', color: 'amber', text: cl, desc: 'This is the call-to-action / closing line. Short, direct, positioned at the bottom or in a badge/button area. Logo and product must be prominently visible in this frame.', timing: '9-15s' },
                         ].filter(f => f.text);
 
-                        const videoPrompt = `Generate a 15-second video sequence for ${brand}. ${baseRules}\n\nFRAME STRUCTURE:\n${frames.map(f => `- ${f.label} (${f.timing}): Include the exact text '${f.text}'. ${f.desc}`).join('\n')}\n\nTransitions must be fluid and professional. The same visual style, color palette, and typography must be consistent across ALL frames. Context: ${ctx}.`;
+                        const videoPrompt = `WATCH the reference image attached. You must create a 15-second video sequence for ${brand} that maintains the EXACT SAME visual identity throughout every single frame.\n\n${baseRules}\n\nFRAME STRUCTURE:\n${frames.map(f => `- ${f.label} (${f.timing}): Show the exact text '${f.text}'. ${f.desc}`).join('\n')}\n- FRAME ${frames.length + 1} — PACKSHOT (13-15s): Clean frame with logo + product centered. Brand background color. No text except brand tagline if present in reference.\n\nMOTION RULES: Smooth transitions between frames — slide, fade or scale. Text enters with subtle animation (fade-in or slide-up). The visual style, color palette, typography and composition must be IDENTICAL across all frames. If one frame looks different from the reference style, it is WRONG.\n\nContext: ${ctx}.`;
 
                         const colorMap: Record<string, string> = { blue: 'text-blue-400', emerald: 'text-emerald-400', amber: 'text-amber-400' };
                         const borderMap: Record<string, string> = { blue: 'border-blue-500/30', emerald: 'border-emerald-500/30', amber: 'border-amber-500/30' };
@@ -906,7 +906,7 @@ export default function App() {
                           <>
                             {/* Individual frame prompts for STATIC / IMAGE */}
                             {frames.map((f, fi) => {
-                              const prompt = `Take as a reference this creative and generate 5 different variants for ${brand}. ${baseRules} This is the ${f.label.toLowerCase()} of the piece. Include the exact text '${f.text}' — it must be ${fi === 0 ? 'prominent and large, the main visual element' : fi === 1 ? 'secondary, supporting the visual hierarchy' : 'short, direct, with logo and product prominent'}. ${f.desc} Context: ${ctx}. Be faithful to the initial logo and graphic lines.`;
+                              const prompt = `LOOK at the reference image I am uploading. You MUST generate 5 variants that look like they were designed by the SAME designer who made this reference.\n\n${baseRules}\n\nTEXT FOR THIS FRAME: Include the EXACT text '${f.text}' with ZERO spelling errors.\n${f.desc}\n\nWHAT TO CHANGE between variants: ONLY the person/character in the photo and the background setting/environment. Everything else — layout, logo position, colors, typography style, graphic elements, composition — must remain IDENTICAL to the reference.\n\nBrand: ${brand}. Context: ${ctx}.`;
                               return (
                                 <div key={fi} className={`flex flex-col border rounded-xl overflow-hidden ${borderMap[f.color]}`}>
                                   <div className={`flex items-center justify-between px-4 py-2 ${bgMap[f.color]}`}>
@@ -922,13 +922,20 @@ export default function App() {
                                     </button>
                                   </div>
                                   <div className="bg-stone-900 border-t border-stone-700 p-4 text-xs text-stone-300 leading-relaxed font-mono whitespace-pre-wrap">
-                                    <span className="text-stone-400">Take as a reference this creative and generate 5 different variants for </span>
+                                    <span className="text-red-400 font-bold">LOOK at the reference image I am uploading.</span>
+                                    <span className="text-stone-400"> You MUST generate 5 variants that look like they were designed by the SAME designer who made this reference.{'\n\n'}</span>
+                                    <span className="text-stone-500">// Brand identity rules{'\n'}</span>
+                                    <span className="text-stone-400">ANALYZE and REPLICATE the EXACT visual identity: layout, logo position (</span>
                                     <span className="text-green-400 font-bold">{brand}</span>
-                                    <span className="text-stone-400">. {baseRules} Include the exact text '</span>
+                                    <span className="text-stone-400">), background colors, typography style, graphic elements, photo treatment.{'\n\n'}</span>
+                                    <span className="text-stone-500">// Text for this frame{'\n'}</span>
+                                    <span className="text-stone-400">Include the EXACT text: '</span>
                                     <span className={`font-bold ${colorMap[f.color]}`}>{f.text}</span>
-                                    <span className="text-stone-400">'. {f.desc} Context: </span>
+                                    <span className="text-stone-400">'{'\n'}{f.desc}{'\n\n'}</span>
+                                    <span className="text-stone-500">// What to change{'\n'}</span>
+                                    <span className="text-stone-400">ONLY change the person/character and background setting. Everything else stays IDENTICAL to the reference.{'\n\n'}</span>
+                                    <span className="text-stone-400">Context: </span>
                                     <span className="text-green-400 font-bold">{ctx}</span>
-                                    <span className="text-stone-400">.</span>
                                   </div>
                                 </div>
                               );
@@ -949,19 +956,24 @@ export default function App() {
                                 </button>
                               </div>
                               <div className="bg-stone-900 border-t border-stone-700 p-4 text-xs text-stone-300 leading-relaxed font-mono whitespace-pre-wrap">
-                                <span className="text-stone-400">Generate a 15-second video sequence for </span>
+                                <span className="text-red-400 font-bold">WATCH the reference image.</span>
+                                <span className="text-stone-400"> Create a 15-second video for </span>
                                 <span className="text-green-400 font-bold">{brand}</span>
-                                <span className="text-stone-400">. {baseRules}{'\n\n'}FRAME STRUCTURE:</span>
+                                <span className="text-stone-400"> maintaining the EXACT SAME visual identity in every frame.{'\n\n'}</span>
+                                <span className="text-stone-500">// Visual identity rules{'\n'}</span>
+                                <span className="text-stone-400">Replicate: layout, logo, background colors, typography, graphic elements, photo style.{'\n\n'}</span>
+                                <span className="text-stone-500">// Frame structure{'\n'}</span>
                                 {frames.map((f, fi) => (
                                   <span key={fi}>
-                                    <span className="text-stone-400">{'\n'}- {f.label} ({f.timing}): Include the exact text '</span>
+                                    <span className="text-stone-400">{f.label} ({f.timing}): '</span>
                                     <span className={`font-bold ${colorMap[f.color]}`}>{f.text}</span>
-                                    <span className="text-stone-400">'. {f.desc}</span>
+                                    <span className="text-stone-400">'{'\n'}</span>
                                   </span>
                                 ))}
-                                <span className="text-stone-400">{'\n\n'}Transitions must be fluid and professional. Context: </span>
+                                <span className="text-stone-400">PACKSHOT (13-15s): Logo + product centered, brand background.{'\n\n'}</span>
+                                <span className="text-stone-500">// Motion{'\n'}</span>
+                                <span className="text-stone-400">Smooth transitions (slide/fade). Consistent style across ALL frames.{'\n'}Context: </span>
                                 <span className="text-green-400 font-bold">{ctx}</span>
-                                <span className="text-stone-400">.</span>
                               </div>
                             </div>
                           </>
