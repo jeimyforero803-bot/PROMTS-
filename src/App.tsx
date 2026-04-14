@@ -53,7 +53,7 @@ export default function App() {
         'PROMPT F1 — IMAGEN': c.copyPrincipal ? `Take as a reference this creative and generate 5 different variants with this image. Respect the logo 100% faithful and the identity of the brand ${c.identifiedBrand}. Change the background environment and the character. Take the same font and include the exact text [${c.copyPrincipal}] ensuring flawless spelling — render each letter exactly as shown inside the brackets, including all accent marks. Be faithful to the initial logo and the graphic lines.` : '',
         'PROMPT F2 — IMAGEN': c.desarrollo ? `Take as a reference this creative and generate 5 different variants with this image. Respect the logo 100% faithful and the identity of the brand ${c.identifiedBrand}. Change the background environment and the character. Take the same font and include the exact text [${c.desarrollo}] ensuring flawless spelling — render each letter exactly as shown inside the brackets, including all accent marks. Be faithful to the initial logo and the graphic lines.` : '',
         'PROMPT F3 — IMAGEN': c.cierre ? `Take as a reference this creative and generate 5 different variants with this image. Respect the logo 100% faithful and the identity of the brand ${c.identifiedBrand}. Change the background environment and the character. Take the same font and include the exact text [${c.cierre}] ensuring flawless spelling — render each letter exactly as shown inside the brackets, including all accent marks. Be faithful to the initial logo and the graphic lines.` : '',
-        'PROMPT VIDEO': c.copyPrincipal ? `Take as a reference this creative and generate a 15-second video sequence for ${c.identifiedBrand}. Respect the logo 100% faithful. Take the same font, colors, and graphic lines. Frames: 0-3s [${c.copyPrincipal}] | 3-9s [${c.desarrollo || ''}] | 9-13s [${c.cierre || ''}] | 13-15s logo + product centered. Ensure flawless spelling — render each letter exactly as shown inside brackets, including all accent marks. Smooth transitions. Faithful to logo and graphic lines throughout.` : '',
+        'PROMPT VIDEO': c.copyPrincipal ? `Using this creative as the visual reference for brand identity, color palette, and art direction — generate a cinematic 15-second video ad for ${c.identifiedBrand}.\n\nVISUAL DIRECTION:\n- Camera: Start with a close-up detail shot, pull back to a medium shot, end with a wide establishing shot.\n- Lighting: Natural, warm key light with soft fill. Golden-hour tones.\n- Color grading: Match the brand palette from the reference creative exactly.\n- Transitions: Smooth cinematic cuts — slow push-ins, gentle pans, subtle dolly movements.\n\nSEQUENCE:\n0-3s: ${c.copyPrincipal ? `Scene establishing the emotion — visual context for "${c.copyPrincipal}". ` : ''}Bold opening. Close-up or dynamic angle.\n3-9s: ${c.desarrollo ? `Main narrative — visual storytelling for "${c.desarrollo}". ` : ''}Product/brand in action. Medium shots.\n9-13s: ${c.cierre ? `Resolution — visual context for "${c.cierre}". ` : ''}Product hero shot, clean composition.\n13-15s: Logo of ${c.identifiedBrand} centered on brand-colored background. Clean end card.\n\nBRAND FIDELITY: Logo exactly as reference — same proportions, colors, no distortion. Same graphic style and visual language.\n\nDO NOT render any text inside the video frames — text will be added in post-production. Focus entirely on visual storytelling, composition, and cinematic quality.` : '',
         'PROMPT RESIZE': c.resizePrompt,
       };
     });
@@ -896,7 +896,26 @@ export default function App() {
 
                         const imgPrompt = (text: string) => `Take as a reference this creative and generate 5 different variants with this image. Respect the logo 100% faithful and the identity of the brand ${brand}. Change the background environment and the character to a different person in a different setting. Take the same font and include the exact text ${b(text)} ensuring flawless spelling — render each letter exactly as shown inside the brackets, including all accent marks (á, é, í, ó, ú, ñ). Be faithful to the initial logo and the graphic lines.`;
 
-                        const videoPrompt = `Take as a reference this creative and generate a 15-second video sequence for ${brand}. Respect the logo 100% faithful and the identity of the brand. Take the same font, colors, and graphic lines.\n\nFrame sequence:\n${frames.map(f => `${f.timing}: include the exact text ${b(f.text)}`).join('\n')}\n13-15s: logo + product centered, brand background.\n\nEnsure flawless spelling — render each letter exactly as shown inside the brackets, including all accent marks (á, é, í, ó, ú, ñ). Smooth transitions between frames. Be faithful to the initial logo and graphic lines throughout all frames.`;
+                        const videoPrompt = `Using this creative as the visual reference for brand identity, color palette, and art direction — generate a cinematic 15-second video ad for ${brand}.
+
+VISUAL DIRECTION:
+- Camera: Start with a close-up detail shot, pull back to a medium shot revealing the scene, end with a wide establishing shot of the product hero moment.
+- Lighting: Natural, warm key light with soft fill. Golden-hour tones for outdoor, studio soft-box for indoor.
+- Color grading: Match the brand palette from the reference creative exactly. Consistent color temperature throughout.
+- Transitions: Smooth cinematic cuts — no abrupt jumps. Use slow push-ins, gentle pans, or subtle dolly movements between scenes.
+
+SEQUENCE:
+0-3s: ${cp ? `Scene establishing the emotion — visual context for "${cp}". ` : ''}Bold opening shot that grabs attention. Close-up or dynamic angle.
+3-9s: ${dev ? `Main narrative moment — visual storytelling for "${dev}". ` : ''}Show the product/brand in action. Medium shots with human connection. Authentic, aspirational setting.
+9-13s: ${cl ? `Resolution and payoff — visual context for "${cl}". ` : ''}Product hero shot, clean composition centered.
+13-15s: Logo of ${brand} centered on brand-colored background. Clean, premium end card.
+
+BRAND FIDELITY:
+- The logo must appear exactly as in the reference — same proportions, same colors, no distortion.
+- Keep the same graphic style, visual language, and brand personality from the reference.
+- Characters should feel authentic and diverse, matching the brand's target audience.
+
+DO NOT render any text, titles, or copy inside the video frames — text will be added in post-production. Focus entirely on visual storytelling, composition, and cinematic quality.`;
 
                         const colorMap: Record<string, string> = { blue: 'text-blue-400', emerald: 'text-emerald-400', amber: 'text-amber-400' };
                         const borderMap: Record<string, string> = { blue: 'border-blue-500/30', emerald: 'border-emerald-500/30', amber: 'border-amber-500/30' };
@@ -942,17 +961,25 @@ export default function App() {
                                 </button>
                               </div>
                               <div className="bg-stone-900 border-t border-stone-700 p-4 text-xs text-stone-300 leading-relaxed font-mono whitespace-pre-wrap">
-                                <span className="text-stone-400">Take as a reference this creative and generate a 15-second video sequence for </span>
+                                <span className="text-stone-400">Using this creative as the visual reference for brand identity, color palette, and art direction — generate a cinematic 15-second video ad for </span>
                                 <span className="text-green-400 font-bold">{brand}</span>
-                                <span className="text-stone-400">. Respect the logo 100% faithful and the identity of the brand. Take the same font, colors, and graphic lines.{'\n\n'}</span>
+                                <span className="text-stone-400">.{'\n\n'}</span>
+                                <span className="text-purple-400 font-bold">VISUAL DIRECTION:{'\n'}</span>
+                                <span className="text-stone-400">- Camera: Close-up → medium → wide establishing shot{'\n'}- Lighting: Natural, warm key light. Golden-hour/studio soft-box{'\n'}- Color grading: Match brand palette exactly{'\n'}- Transitions: Smooth cinematic cuts, slow push-ins, gentle pans{'\n\n'}</span>
+                                <span className="text-purple-400 font-bold">SEQUENCE:{'\n'}</span>
                                 {frames.map((f, fi) => (
                                   <span key={fi}>
-                                    <span className="text-stone-400">{f.timing}: include the exact text </span>
-                                    <span className={`font-bold ${colorMap[f.color]}`}>[{f.text}]</span>
+                                    <span className="text-stone-500">{f.timing}: </span>
+                                    <span className="text-stone-400">Visual context for </span>
+                                    <span className={`font-bold ${colorMap[f.color]}`}>"{f.text}"</span>
                                     <span className="text-stone-400">{'\n'}</span>
                                   </span>
                                 ))}
-                                <span className="text-stone-400">13-15s: logo + product centered, brand background.{'\n\n'}Ensure flawless spelling — render each letter exactly as shown inside the brackets, including all accent marks (á, é, í, ó, ú, ñ). Smooth transitions between frames. Be faithful to the initial logo and graphic lines throughout all frames.</span>
+                                <span className="text-stone-400">13-15s: Logo of </span>
+                                <span className="text-green-400 font-bold">{brand}</span>
+                                <span className="text-stone-400"> centered. Clean end card.{'\n\n'}</span>
+                                <span className="text-red-400 font-semibold">DO NOT render any text inside the video — text added in post-production.</span>
+                                <span className="text-stone-400"> Focus on visual storytelling, composition, and cinematic quality.</span>
                               </div>
                             </div>
                           </>
