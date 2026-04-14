@@ -425,7 +425,7 @@ export default function App() {
           </div>
           <div className="hidden sm:flex items-center gap-2 text-sm font-medium text-stone-400">
             <Sparkles className="w-4 h-4 text-green-500" />
-            <span>AI-Powered DCO</span>
+            <span>Powered by ZALVAJE</span>
           </div>
         </div>
       </header>
