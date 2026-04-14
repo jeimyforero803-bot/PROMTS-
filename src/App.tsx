@@ -53,7 +53,7 @@ export default function App() {
         'PROMPT F1 — IMAGEN': c.copyPrincipal ? `Take as a reference this creative and generate 5 different variants with this image. Respect the logo 100% faithful and the identity of the brand ${c.identifiedBrand}. Change the background environment and the character. Take the same font and include the exact text [${c.copyPrincipal}] ensuring flawless spelling — render each letter exactly as shown inside the brackets, including all accent marks. Be faithful to the initial logo and the graphic lines.` : '',
         'PROMPT F2 — IMAGEN': c.desarrollo ? `Take as a reference this creative and generate 5 different variants with this image. Respect the logo 100% faithful and the identity of the brand ${c.identifiedBrand}. Change the background environment and the character. Take the same font and include the exact text [${c.desarrollo}] ensuring flawless spelling — render each letter exactly as shown inside the brackets, including all accent marks. Be faithful to the initial logo and the graphic lines.` : '',
         'PROMPT F3 — IMAGEN': c.cierre ? `Take as a reference this creative and generate 5 different variants with this image. Respect the logo 100% faithful and the identity of the brand ${c.identifiedBrand}. Change the background environment and the character. Take the same font and include the exact text [${c.cierre}] ensuring flawless spelling — render each letter exactly as shown inside the brackets, including all accent marks. Be faithful to the initial logo and the graphic lines.` : '',
-        'PROMPT VIDEO': c.copyPrincipal ? `Take as a reference this creative and generate a cinematic 15-second video ad for ${c.identifiedBrand}. Respect the logo 100% faithful and the identity of the brand — same colors, same graphic lines, same visual style.\n\nTYPOGRAPHY RULES — CRITICAL:\n- Use the EXACT same font style from the reference creative for all on-screen text.\n- Each text must appear as a clean, sharp, high-contrast typographic overlay — like a professional motion graphic, NOT embedded in the scene.\n- Text must be perfectly legible: solid color on contrasting background or with a subtle shadow/backdrop.\n- Render every letter EXACTLY as written inside the brackets — spell each character one by one, including accents (á, é, í, ó, ú, ñ). Do NOT rearrange, skip, or substitute any letter.\n- Text should animate in smoothly (fade-in, slide-up, or scale-in) and hold for the full duration of each frame.\n\nCAMERA & DIRECTION:\n- Cinematic angles: close-ups, medium shots, slow push-ins, gentle pans.\n- Warm natural lighting matching the brand mood. Smooth transitions between frames.\n\nFRAME SEQUENCE:\n0-4s: Bold opening shot. Display text overlay: [${c.copyPrincipal}]. Centered or lower-third, large and bold.\n4-10s: Main narrative — product/brand in action. Display text overlay: [${c.desarrollo || ''}]. Clean readable placement.\n10-13s: Resolution — product hero shot. Display text overlay: [${c.cierre || ''}]. Prominent, clean.\n13-15s: End card — logo of ${c.identifiedBrand} centered on brand-colored background.\n\nBRAND FIDELITY: Logo exactly as reference — same proportions, colors, zero distortion. Same graphic style and color palette throughout.` : '',
+        'PROMPT VIDEO': c.copyPrincipal ? `Take as a reference this creative and generate a cinematic 15-second video ad for ${c.identifiedBrand}. Respect the logo 100% faithful and the identity of the brand — same colors, same graphic lines, same visual style.\n\nTEXT ON SCREEN — ABSOLUTE PRIORITY:\n- Text MUST be clearly visible, large, and readable in EVERY frame.\n- Use the EXACT same font style from the reference creative.\n- Render as clean, sharp typographic overlay — professional motion graphics. NOT blended into background.\n- Semi-transparent backdrop or drop shadow for guaranteed legibility.\n- CENTERED or LOWER-THIRD, at least 30% of frame width.\n\nSPELLING — ZERO TOLERANCE:\n- Read each word inside brackets CHARACTER BY CHARACTER.\n- Copy every letter EXACTLY — including accents: á, é, í, ó, ú, ñ, ü.\n- Do NOT autocorrect, rephrase, translate, or modify any word.\n- VERIFY spelling matches brackets letter-by-letter before rendering.\n\nCAMERA & DIRECTION:\n- Cinematic angles, warm lighting, smooth transitions.\n- Text animates in smoothly (fade-in, slide-up, scale-in) and holds steady.\n\nFRAME SEQUENCE:\n0-4s: Bold opening. Large text overlay: [${c.copyPrincipal}]. Centered, bold.\n4-10s: Main narrative. Text overlay: [${c.desarrollo || ''}]. Prominent.\n10-13s: Resolution. Text overlay: [${c.cierre || ''}]. Clear, impactful.\n13-15s: End card — logo of ${c.identifiedBrand} centered.\n\nBRAND FIDELITY: Logo exactly as reference. Same graphic style and palette throughout.` : '',
         'PROMPT RESIZE': c.resizePrompt,
       };
     });
@@ -161,7 +161,16 @@ export default function App() {
       brandGuidelines: '',
       masterPromptEn: `take as a reference this creative and generate 5 different variants with this image. respect the logo 100% faithful and the identity of the brand ${brand}. change the background environment and the character to: ${context}. take the same font and Include the exact text '${title || concepto || ''}' and '${copy || ''}' ensuring flawless spelling. be faithful to the initial logo and the graphic lines.`,
       masterPromptEs: `toma como referencia esta pieza creativa y genera 5 variantes diferentes con esta imagen. respeta el logo 100% fiel y la identidad de la marca ${brand}. cambia el entorno del fondo y el personaje a: ${context}. usa la misma tipografía e incluye el texto exacto '${title || concepto || ''}' y '${copy || ''}' asegurando ortografía impecable. sé fiel al logo inicial y a las líneas gráficas.`,
-      resizePrompt: size ? `Resize this creative from its original dimensions to ${size}. Extend the background naturally using outpainting. Keep all text, logos, and key elements in the same position. Maintain brand identity of ${brand}.` : '',
+      resizePrompt: size ? `Adapt this creative to ${size} dimensions while maintaining 100% brand fidelity for ${brand}.
+
+RESIZE RULES:
+- Use intelligent outpainting to extend the background naturally — match textures, colors, lighting, and perspective seamlessly.
+- The logo MUST remain in its exact original position and proportions — do NOT scale, move, stretch, or crop it.
+- All text must remain fully legible and in its original position. If the new aspect ratio requires repositioning, keep text centered and at the same relative scale.
+- Key visual elements (product, character, focal point) must stay in the visual center of attention — use rule of thirds for the new dimensions.
+- Do NOT add new elements, watermarks, or artifacts. The extended area should feel like a natural continuation of the original scene.
+- Maintain the exact same color palette, lighting direction, and brand style.
+- If adapting from horizontal to vertical (or vice versa): extend the dominant background direction, never crop the main subject.` : '',
     };
   };
 
@@ -898,27 +907,34 @@ export default function App() {
 
                         const videoPrompt = `Take as a reference this creative and generate a cinematic 15-second video ad for ${brand}. Respect the logo 100% faithful and the identity of the brand — same colors, same graphic lines, same visual style.
 
-TYPOGRAPHY RULES — CRITICAL:
-- Use the EXACT same font style from the reference creative for all on-screen text.
-- Each text must appear as a clean, sharp, high-contrast typographic overlay — like a professional motion graphic, NOT embedded in the scene.
-- Text must be perfectly legible: solid color on contrasting background or with a subtle shadow/backdrop.
-- Render every letter EXACTLY as written inside the brackets — spell each character one by one, including accents (á, é, í, ó, ú, ñ). Do NOT rearrange, skip, or substitute any letter.
-- Text should animate in smoothly (fade-in, slide-up, or scale-in) and hold for the full duration of each frame.
+TEXT ON SCREEN — ABSOLUTE PRIORITY:
+- The text MUST be clearly visible, large, and readable in EVERY frame where it appears.
+- Use the EXACT same font style from the reference creative.
+- Render text as a clean, sharp, high-contrast typographic overlay — like professional motion graphics. NOT blended into the background.
+- Place text on a semi-transparent backdrop or use drop shadow to guarantee legibility against any background.
+- Text should be CENTERED or in LOWER-THIRD position, occupying at least 30% of the frame width.
+
+SPELLING — ZERO TOLERANCE FOR ERRORS:
+- Read each word inside the brackets CHARACTER BY CHARACTER: the first letter, then the second, then the third, and so on.
+- Copy every single letter EXACTLY as shown — including all Spanish accent marks: á, é, í, ó, ú, ñ, ü.
+- Do NOT autocorrect, rephrase, translate, abbreviate, or modify any word. The text inside brackets is FINAL.
+- Before rendering each frame, VERIFY the spelling matches the brackets letter-by-letter.
+- If a word has an accent (e.g., "energía"), the accent MUST appear. Missing accents = spelling error.
 
 CAMERA & DIRECTION:
 - Cinematic angles: close-ups, medium shots, slow push-ins, gentle pans.
 - Warm natural lighting matching the brand mood. Smooth transitions between frames.
+- Text animates in smoothly (fade-in, slide-up, or scale-in) and holds steady for the full frame duration.
 
 FRAME SEQUENCE:
-0-4s: Bold opening shot — attention-grabbing visual. Display text overlay: ${b(cp)}. Centered or lower-third placement, large and bold.
-4-10s: Main narrative — product/brand in action, human connection. Display text overlay: ${b(dev || '')}. Clean readable placement over the visual.
-10-13s: Resolution moment — product hero shot. Display text overlay: ${b(cl || '')}. Prominent, clean composition.
-13-15s: End card — logo of ${brand} centered on brand-colored background. Clean, premium.
+0-4s: Bold opening — attention-grabbing visual. Large text overlay: ${b(cp)}. Centered, bold, impossible to miss.
+4-10s: Main narrative — product/brand in action. Text overlay: ${b(dev || '')}. Clean, prominent placement.
+10-13s: Resolution — product hero shot. Text overlay: ${b(cl || '')}. Clear, impactful.
+13-15s: End card — logo of ${brand} centered on brand-colored background.
 
 BRAND FIDELITY:
-- Logo exactly as in the reference — same proportions, same colors, zero distortion.
-- Maintain the same graphic style, color palette, and brand personality throughout.
-- Every frame must feel like it belongs to the same brand campaign as the reference creative.`;
+- Logo exactly as reference — same proportions, colors, zero distortion.
+- Same graphic style, color palette, and brand personality in every frame.`;
 
                         const colorMap: Record<string, string> = { blue: 'text-blue-400', emerald: 'text-emerald-400', amber: 'text-amber-400' };
                         const borderMap: Record<string, string> = { blue: 'border-blue-500/30', emerald: 'border-emerald-500/30', amber: 'border-amber-500/30' };
@@ -967,8 +983,10 @@ BRAND FIDELITY:
                                 <span className="text-stone-400">Take as a reference this creative and generate a cinematic 15-second video ad for </span>
                                 <span className="text-green-400 font-bold">{brand}</span>
                                 <span className="text-stone-400">. Respect the logo 100% faithful and the identity of the brand.{'\n\n'}</span>
-                                <span className="text-purple-400 font-bold">TYPOGRAPHY RULES — CRITICAL:{'\n'}</span>
-                                <span className="text-stone-400">- Same font from reference. Clean typographic overlay (motion graphic).{'\n'}- Perfectly legible, solid color on contrast. Render every letter EXACTLY as in brackets.{'\n'}- Animate in smoothly (fade-in, slide-up, or scale-in).{'\n\n'}</span>
+                                <span className="text-purple-400 font-bold">TEXT ON SCREEN — ABSOLUTE PRIORITY:{'\n'}</span>
+                                <span className="text-stone-400">- Large, readable, clean typographic overlay (motion graphics). 30%+ frame width.{'\n'}- Same font from reference. Semi-transparent backdrop for legibility.{'\n\n'}</span>
+                                <span className="text-red-400 font-bold">SPELLING — ZERO TOLERANCE:{'\n'}</span>
+                                <span className="text-stone-400">- Read each word CHARACTER BY CHARACTER. Copy every letter EXACTLY including á, é, í, ó, ú, ñ.{'\n'}- Do NOT autocorrect, rephrase, or modify. VERIFY letter-by-letter before rendering.{'\n\n'}</span>
                                 <span className="text-purple-400 font-bold">FRAME SEQUENCE:{'\n'}</span>
                                 <span className="text-stone-500">0-4s: </span>
                                 <span className="text-stone-400">Bold opening. Text overlay: </span>
