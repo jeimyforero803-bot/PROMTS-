@@ -50,8 +50,10 @@ export default function App() {
         'AUDIENCIA MACRO': c.audienciaMacro,
         'MICRO ELEGIDA': c.audienciaReferenciaElegida,
         'DRIVER': c.driverComunicacion,
-        'PROMPT MAESTRO (EN)': `take as a reference this creative and generate 5 different variants with this image. respect the logo 100% faithful and the identity of the brand ${c.identifiedBrand}. change the background environment and the character to: ${c.campaignContext}. take the same font and Include the exact text '${c.copyPrincipal || c.suggestedTitle}${c.desarrollo ? '. ' + c.desarrollo : ''}${c.cierre ? '. ' + c.cierre : ''}' ensuring flawless spelling. be faithful to the initial logo and the graphic lines.`,
-        'PROMPT MAESTRO (ES)': `toma como referencia esta pieza creativa y genera 5 variantes diferentes con esta imagen. respeta el logo 100% fiel y la identidad de la marca ${c.identifiedBrand}. cambia el entorno del fondo y el personaje a: ${c.campaignContext}. usa la misma tipografía e incluye el texto exacto '${c.copyPrincipal || c.suggestedTitle}${c.desarrollo ? '. ' + c.desarrollo : ''}${c.cierre ? '. ' + c.cierre : ''}' asegurando ortografía impecable. sé fiel al logo inicial y a las líneas gráficas.`,
+        'PROMPT F1 — COPY PRINCIPAL': c.copyPrincipal ? `Take as a reference this creative and generate 5 different variants for ${c.identifiedBrand}. Respect the logo 100% faithful. Reproduce product with photographic fidelity. Use brand color palette only. Same font family. Include the exact text '${c.copyPrincipal}' — prominent, large, main visual element. Context: ${c.campaignContext}. Flawless Spanish spelling.` : '',
+        'PROMPT F2 — DESARROLLO': c.desarrollo ? `Take as a reference this creative and generate 5 different variants for ${c.identifiedBrand}. Respect the logo 100% faithful. Reproduce product with photographic fidelity. Use brand color palette only. Same font family. Include the exact text '${c.desarrollo}' — secondary text supporting the visual hierarchy, with product benefit visible. Context: ${c.campaignContext}. Flawless Spanish spelling.` : '',
+        'PROMPT F3 — CIERRE': c.cierre ? `Take as a reference this creative and generate 5 different variants for ${c.identifiedBrand}. Respect the logo 100% faithful. Reproduce product with photographic fidelity. Use brand color palette only. Same font family. Include the exact text '${c.cierre}' — short, direct CTA with logo and product prominent. Context: ${c.campaignContext}. Flawless Spanish spelling.` : '',
+        'PROMPT VIDEO': c.copyPrincipal ? `Generate a 15-second video sequence for ${c.identifiedBrand}. Respect logo, product, brand colors, typography 100%. FRAMES: F1 (0-3s) Hook: '${c.copyPrincipal}' — large, attention-grabbing. F2 (3-9s) Body: '${c.desarrollo || ''}' — product benefit visible. F3 (9-13s) CTA: '${c.cierre || ''}' — direct call to action. F4 (13-15s) Packshot: logo + product. Fluid transitions, consistent style. Context: ${c.campaignContext}. Flawless Spanish.` : '',
         'PROMPT RESIZE': c.resizePrompt,
       };
     });
@@ -875,69 +877,91 @@ export default function App() {
                     <div className="space-y-4">
                       <h3 className="text-sm font-bold text-gray-900 border-b border-stone-100 pb-2 flex items-center gap-2">
                         <Sparkles className="w-4 h-4 text-green-600" />
-                        Prompt Maestro (Master Prompt)
+                        Prompts Maestros por Frame
                       </h3>
 
-                      {/* Filled Template Prompt */}
+                      {/* Per-frame prompts */}
                       {(() => {
-                        const fullCopy = creative.copyPrincipal ? `${creative.copyPrincipal}${creative.desarrollo ? '. ' + creative.desarrollo : ''}${creative.cierre ? '. ' + creative.cierre : ''}` : creative.suggestedCopy;
-                        const filledEn = `take as a reference this creative and generate 5 different variants with this image. respect the logo 100% faithful and the identity of the brand ${creative.identifiedBrand}. change the background environment and the character to: ${creative.campaignContext}. take the same font and Include the exact text '${creative.suggestedTitle || creative.copyPrincipal || ''}' and '${fullCopy}' ensuring flawless spelling. be faithful to the initial logo and the graphic lines.`;
-                        const filledEs = `toma como referencia esta pieza creativa y genera 5 variantes diferentes con esta imagen. respeta el logo 100% fiel y la identidad de la marca ${creative.identifiedBrand}. cambia el entorno del fondo y el personaje a: ${creative.campaignContext}. usa la misma tipografía e incluye el texto exacto '${creative.suggestedTitle || creative.copyPrincipal || ''}' y '${fullCopy}' asegurando ortografía impecable. sé fiel al logo inicial y a las líneas gráficas.`;
+                        const brand = creative.identifiedBrand;
+                        const ctx = creative.campaignContext;
+                        const cp = creative.copyPrincipal || creative.suggestedTitle || '';
+                        const dev = creative.desarrollo || '';
+                        const cl = creative.cierre || '';
+                        const baseRules = `Respect the logo 100% faithful — same size, position, colors and proportions. NEVER modify, distort or relocate it. If there is a visible product (packaging, bottle, box), reproduce it with photographic fidelity — exact colors, legible label, correct shape. Use exclusively the brand color palette of ${brand}. Use the same font family, weight and style. Flawless spelling in Spanish — correct tildes, punctuation and coherence.`;
+
+                        const frames = [
+                          { label: 'FRAME 1 — Copy Principal (Hook)', color: 'blue', text: cp, desc: 'This is the opening frame / hero visual. The text must be prominent, large, and attention-grabbing.', timing: '0-3s' },
+                          { label: 'FRAME 2 — Desarrollo (Body)', color: 'emerald', text: dev, desc: 'This is the body frame showing product benefit or reason-to-believe. Text is secondary, supporting the hook.', timing: '3-9s' },
+                          { label: 'FRAME 3 — Cierre (CTA)', color: 'amber', text: cl, desc: 'This is the closing frame with call to action. Text is short, direct, actionable. Logo and product must be prominent.', timing: '9-15s' },
+                        ].filter(f => f.text);
+
+                        const videoPrompt = `Generate a 15-second video sequence for ${brand}. ${baseRules}\n\nFRAME STRUCTURE:\n${frames.map(f => `- ${f.label} (${f.timing}): Include the exact text '${f.text}'. ${f.desc}`).join('\n')}\n\nTransitions must be fluid and professional. The same visual style, color palette, and typography must be consistent across ALL frames. Context: ${ctx}.`;
+
+                        const colorMap: Record<string, string> = { blue: 'text-blue-400', emerald: 'text-emerald-400', amber: 'text-amber-400' };
+                        const borderMap: Record<string, string> = { blue: 'border-blue-500/30', emerald: 'border-emerald-500/30', amber: 'border-amber-500/30' };
+                        const bgMap: Record<string, string> = { blue: 'bg-blue-500/5', emerald: 'bg-emerald-500/5', amber: 'bg-amber-500/5' };
+                        const labelBgMap: Record<string, string> = { blue: 'bg-blue-100 text-blue-700', emerald: 'bg-emerald-100 text-emerald-700', amber: 'bg-amber-100 text-amber-700' };
+
                         return (
                           <>
-                            {/* English Filled */}
-                            <div className="flex flex-col">
-                              <div className="flex items-center justify-between mb-2">
-                                <h4 className="text-xs font-bold text-stone-600 uppercase tracking-wider">Inglés (Para la IA)</h4>
-                                <button
-                                  onClick={() => copyToClipboard(filledEn, `${creative.id}-en`)}
-                                  className="flex items-center gap-1 px-2 py-1 bg-stone-50 hover:bg-green-50 text-stone-600 hover:text-green-600 rounded text-[10px] font-bold transition-colors border border-stone-200 hover:border-green-200"
-                                >
-                                  {copiedId === `${creative.id}-en` ? (
-                                    <><Check className="w-3 h-3 text-green-600" /> Copiado</>
-                                  ) : (
-                                    <><Copy className="w-3 h-3" /> Copiar</>
-                                  )}
-                                </button>
-                              </div>
-                              <div className="bg-stone-900 border border-stone-700 p-4 rounded-xl text-xs text-stone-300 leading-relaxed font-mono whitespace-pre-wrap">
-                                <span className="text-stone-400">take as a reference this creative and generate 5 different variants with this image. respect the logo 100% faithful and the identity of the brand </span>
-                                <span className="text-green-400 font-bold">{creative.identifiedBrand}</span>
-                                <span className="text-stone-400">. change the background environment and the character to: </span>
-                                <span className="text-green-400 font-bold">{creative.campaignContext}</span>
-                                <span className="text-stone-400">. take the same font and Include the exact text '</span>
-                                <span className="text-orange-400 font-bold">{creative.suggestedTitle || creative.copyPrincipal || ''}</span>
-                                <span className="text-stone-400">' and '</span>
-                                <span className="text-orange-400 font-bold">{fullCopy}</span>
-                                <span className="text-stone-400">' ensuring flawless spelling. be faithful to the initial logo and the graphic lines.</span>
-                              </div>
-                            </div>
+                            {/* Individual frame prompts for STATIC / IMAGE */}
+                            {frames.map((f, fi) => {
+                              const prompt = `Take as a reference this creative and generate 5 different variants for ${brand}. ${baseRules} This is the ${f.label.toLowerCase()} of the piece. Include the exact text '${f.text}' — it must be ${fi === 0 ? 'prominent and large, the main visual element' : fi === 1 ? 'secondary, supporting the visual hierarchy' : 'short, direct, with logo and product prominent'}. ${f.desc} Context: ${ctx}. Be faithful to the initial logo and graphic lines.`;
+                              return (
+                                <div key={fi} className={`flex flex-col border rounded-xl overflow-hidden ${borderMap[f.color]}`}>
+                                  <div className={`flex items-center justify-between px-4 py-2 ${bgMap[f.color]}`}>
+                                    <div className="flex items-center gap-2">
+                                      <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase ${labelBgMap[f.color]}`}>{f.label}</span>
+                                      <span className="text-[10px] text-stone-400">Imagen / Estático</span>
+                                    </div>
+                                    <button
+                                      onClick={() => copyToClipboard(prompt, `${creative.id}-f${fi}`)}
+                                      className="flex items-center gap-1 px-2 py-1 bg-white hover:bg-green-50 text-stone-600 hover:text-green-600 rounded text-[10px] font-bold transition-colors border border-stone-200 hover:border-green-200"
+                                    >
+                                      {copiedId === `${creative.id}-f${fi}` ? <><Check className="w-3 h-3 text-green-600" /> Copiado</> : <><Copy className="w-3 h-3" /> Copiar</>}
+                                    </button>
+                                  </div>
+                                  <div className="bg-stone-900 border-t border-stone-700 p-4 text-xs text-stone-300 leading-relaxed font-mono whitespace-pre-wrap">
+                                    <span className="text-stone-400">Take as a reference this creative and generate 5 different variants for </span>
+                                    <span className="text-green-400 font-bold">{brand}</span>
+                                    <span className="text-stone-400">. {baseRules} Include the exact text '</span>
+                                    <span className={`font-bold ${colorMap[f.color]}`}>{f.text}</span>
+                                    <span className="text-stone-400">'. {f.desc} Context: </span>
+                                    <span className="text-green-400 font-bold">{ctx}</span>
+                                    <span className="text-stone-400">.</span>
+                                  </div>
+                                </div>
+                              );
+                            })}
 
-                            {/* Spanish Filled */}
-                            <div className="flex flex-col">
-                              <div className="flex items-center justify-between mb-2">
-                                <h4 className="text-xs font-bold text-stone-600 uppercase tracking-wider">Español (Referencia)</h4>
+                            {/* VIDEO prompt — all frames combined */}
+                            <div className="flex flex-col border rounded-xl overflow-hidden border-purple-500/30">
+                              <div className="flex items-center justify-between px-4 py-2 bg-purple-500/5">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[9px] font-black px-2 py-0.5 rounded-full uppercase bg-purple-100 text-purple-700">VIDEO FLOW</span>
+                                  <span className="text-[10px] text-stone-400">Secuencia de {frames.length} frames — 15s</span>
+                                </div>
                                 <button
-                                  onClick={() => copyToClipboard(filledEs, `${creative.id}-es`)}
-                                  className="flex items-center gap-1 px-2 py-1 bg-stone-50 hover:bg-green-50 text-stone-600 hover:text-green-600 rounded text-[10px] font-bold transition-colors border border-stone-200 hover:border-green-200"
+                                  onClick={() => copyToClipboard(videoPrompt, `${creative.id}-video`)}
+                                  className="flex items-center gap-1 px-2 py-1 bg-white hover:bg-green-50 text-stone-600 hover:text-green-600 rounded text-[10px] font-bold transition-colors border border-stone-200 hover:border-green-200"
                                 >
-                                  {copiedId === `${creative.id}-es` ? (
-                                    <><Check className="w-3 h-3 text-green-600" /> Copiado</>
-                                  ) : (
-                                    <><Copy className="w-3 h-3" /> Copiar</>
-                                  )}
+                                  {copiedId === `${creative.id}-video` ? <><Check className="w-3 h-3 text-green-600" /> Copiado</> : <><Copy className="w-3 h-3" /> Copiar</>}
                                 </button>
                               </div>
-                              <div className="bg-stone-900 border border-stone-700 p-4 rounded-xl text-xs text-stone-300 leading-relaxed font-mono whitespace-pre-wrap">
-                                <span className="text-stone-400">toma como referencia esta pieza creativa y genera 5 variantes diferentes con esta imagen. respeta el logo 100% fiel y la identidad de la marca </span>
-                                <span className="text-green-400 font-bold">{creative.identifiedBrand}</span>
-                                <span className="text-stone-400">. cambia el entorno del fondo y el personaje a: </span>
-                                <span className="text-green-400 font-bold">{creative.campaignContext}</span>
-                                <span className="text-stone-400">. usa la misma tipografía e incluye el texto exacto '</span>
-                                <span className="text-orange-400 font-bold">{creative.suggestedTitle || creative.copyPrincipal || ''}</span>
-                                <span className="text-stone-400">' y '</span>
-                                <span className="text-orange-400 font-bold">{fullCopy}</span>
-                                <span className="text-stone-400">' asegurando ortografía impecable. sé fiel al logo inicial y a las líneas gráficas.</span>
+                              <div className="bg-stone-900 border-t border-stone-700 p-4 text-xs text-stone-300 leading-relaxed font-mono whitespace-pre-wrap">
+                                <span className="text-stone-400">Generate a 15-second video sequence for </span>
+                                <span className="text-green-400 font-bold">{brand}</span>
+                                <span className="text-stone-400">. {baseRules}{'\n\n'}FRAME STRUCTURE:</span>
+                                {frames.map((f, fi) => (
+                                  <span key={fi}>
+                                    <span className="text-stone-400">{'\n'}- {f.label} ({f.timing}): Include the exact text '</span>
+                                    <span className={`font-bold ${colorMap[f.color]}`}>{f.text}</span>
+                                    <span className="text-stone-400">'. {f.desc}</span>
+                                  </span>
+                                ))}
+                                <span className="text-stone-400">{'\n\n'}Transitions must be fluid and professional. Context: </span>
+                                <span className="text-green-400 font-bold">{ctx}</span>
+                                <span className="text-stone-400">.</span>
                               </div>
                             </div>
                           </>
