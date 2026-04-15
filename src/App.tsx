@@ -896,17 +896,14 @@ export default function App() {
 
                         const fullCopy = [cp, dev, cl].filter(Boolean).join(' ');
 
-                        // Spell out text word by word for anti-hallucination
-                        const spellText = (t: string) => t.split(' ').map(w => `"${w}" [${w.split('').join('-')}]`).join(', ');
-
                         const imgPrompt = (text: string) =>
-                          `take as a reference this creative and generate 5 different variants with this image. respect the logo 100% faithful and the identity of the brand ${brand}. change the background environment and the character to: ${creative.campaignContext || creative.audienciaReferenciaElegida || 'a different person in the same mood'}. take the same font and Include the exact text as follows:\n\nTEXT TO RENDER (word by word): ${spellText(text)}\n\nFULL TEXT: "${text}"\n\nSPELLING RULES: render each word CHARACTER BY CHARACTER as spelled in brackets above. every accent mark (á é í ó ú ñ) is mandatory. do NOT autocorrect, rephrase, or modify any word. do NOT invent or add any text not listed above.\n\nbe faithful to the initial logo and the graphic lines. do not add white space — use only the brand colors from the reference.`;
+                          `take as a reference this creative and generate 5 different variants with this image. respect the logo 100% faithful and the identity of the brand ${brand}. change the background environment and the character to: ${creative.campaignContext || creative.audienciaReferenciaElegida || 'a different person in the same mood'}. take the same font and Include EXACTLY this text — do NOT modify, rephrase, abbreviate, translate, or autocorrect ANY word:\n\n"""${text}"""\n\nThis text has ${text.length} characters and ${text.split(' ').length} words. Copy it VERBATIM. Every letter matters: ${text.split(' ').map(w => `"${w}"(${w.length})`).join(' ')}. Accents are mandatory: á é í ó ú ñ. If a word has an accent in the original, it MUST have it in the output.\n\nbe faithful to the initial logo and the graphic lines. do not add white space — use only the brand colors from the reference.`;
 
                         const videoPrompt =
                           `generate a 15-second video ad for ${brand} using this reference image as visual template. respect the logo 100% faithful and the identity of the brand ${brand} in every frame. ` +
-                          (cp ? `frame 1 (0-4s): show text word by word: ${spellText(cp)}. FULL TEXT: "${cp}". ` : '') +
-                          (dev ? `frame 2 (4-10s): show text word by word: ${spellText(dev)}. FULL TEXT: "${dev}". ` : '') +
-                          (cl ? `frame 3 (10-13s): show text word by word: ${spellText(cl)}. FULL TEXT: "${cl}". ` : '') +
+                          (cp ? `frame 1 (0-4s): show EXACTLY this text — do NOT modify: """${cp}""" (${cp.length} chars, ${cp.split(' ').length} words). ` : '') +
+                          (dev ? `frame 2 (4-10s): show EXACTLY this text — do NOT modify: """${dev}""" (${dev.length} chars, ${dev.split(' ').length} words). ` : '') +
+                          (cl ? `frame 3 (10-13s): show EXACTLY this text — do NOT modify: """${cl}""" (${cl.length} chars, ${cl.split(' ').length} words). ` : '') +
                           `frame 4 (13-15s): ${brand} logo centered on brand color. ` +
                           `take the same font from reference for all text. ensure flawless spelling with all accents (á é í ó ú ñ). be faithful to the initial logo and graphic lines. same colors, same style throughout all 15 seconds. one cohesive ad.`;
 
@@ -932,15 +929,13 @@ export default function App() {
                                     </button>
                                   </div>
                                   <div className="bg-stone-900 border-t border-stone-700 p-4 text-xs text-stone-300 leading-relaxed whitespace-pre-wrap overflow-x-auto">
-                                    <span className="text-stone-400">take as a reference this creative and generate 5 variants. respect the logo 100% faithful — brand </span>
+                                    <span className="text-stone-400">...respect logo 100% — brand </span>
                                     <span className="text-green-400 font-bold">{brand}</span>
-                                    <span className="text-stone-400">. change background + character to: </span>
-                                    <span className="text-amber-300">{creative.campaignContext || creative.audienciaReferenciaElegida || 'different person, same mood'}</span>
-                                    <span className="text-stone-400">.{'\n\n'}</span>
-                                    <span className="text-red-400 font-bold">TEXT TO RENDER (word by word):{'\n'}</span>
-                                    <span className={`font-bold ${colorMap[f.color]}`}>{(f.text || '').split(' ').map(w => `"${w}" [${w.split('').join('-')}]`).join(', ')}</span>
-                                    <span className="text-stone-400">{'\n\n'}</span>
-                                    <span className="text-stone-400">same font, faithful to logo + graphic lines. no white space — brand colors only.</span>
+                                    <span className="text-stone-400">. Include EXACTLY this text — do NOT modify:{'\n\n'}</span>
+                                    <span className={`font-bold text-base ${colorMap[f.color]}`}>"""{f.text}"""</span>
+                                    <span className="text-stone-400">{'\n'}</span>
+                                    <span className="text-red-400">{(f.text || '').length} chars, {(f.text || '').split(' ').length} words: {(f.text || '').split(' ').map(w => `"${w}"(${w.length})`).join(' ')}</span>
+                                    <span className="text-stone-400">{'\n\n'}Accents mandatory (á é í ó ú ñ). brand colors only, no white.</span>
                                   </div>
                                 </div>
                               );
