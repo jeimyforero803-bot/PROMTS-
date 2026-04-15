@@ -894,57 +894,19 @@ export default function App() {
                           { label: 'FRAME 3 — Cierre', color: 'amber', text: cl, timing: '9-13s' },
                         ].filter(f => f.text);
 
-                        const imgPrompt = (text: string) => {
-                          // Spell out each word letter by letter for anti-hallucination
-                          const spelledOut = text.split(' ').map(w => `"${w}" = ${w.split('').join('-')} (${w.length} chars)`).join('\n    ');
-                          return JSON.stringify({
-                            task: `Generate 5 variants of the attached reference image for brand "${brand}".`,
-                            concept: "Take the ORIGINAL reference image as a VISUAL TEMPLATE. Keep the EXACT same design system (colors, layout, graphic elements, logo position, typography style). REPLACE the text copy with the new text below. Change ONLY the person/character and background.",
-                            brandIdentity: {
-                              sacred: `Logo "${brand}" — copy PIXEL BY PIXEL. Same position, same size. NEVER recreate or reinterpret.`,
-                              colors: "EXACT same color palette as reference. The brand colors (backgrounds, shapes, borders) are FIXED. Do NOT add white space or new colors.",
-                              graphicElements: "ALL decorative shapes, borders, frames, silhouettes, overlays from reference stay IDENTICAL."
-                            },
-                            newText: {
-                              content: text,
-                              letterByLetter: spelledOut,
-                              rendering: "Render this text CHARACTER BY CHARACTER as spelled above. Every accent (á é í ó ú ñ) is MANDATORY. Do NOT autocorrect, rephrase, or modify ANY word.",
-                              position: "Same zone as original text in reference. Same font family, weight, color, shadow/outline.",
-                              hierarchy: "Maintain the same visual weight and size ratio as the original text in reference."
-                            },
-                            whatChanges: "ONLY: (1) the person/character — different person, same energy/mood/action, (2) background scene — different but same mood, (3) text content — new copy as specified above.",
-                            whatStaysIdentical: "Logo, brand colors, graphic shapes, borders, silhouettes, overlays, layout structure, typography style, color palette. These are IMMUTABLE."
-                          }, null, 2);
-                        };
+                        const fullCopy = [cp, dev, cl].filter(Boolean).join(' ');
 
-                        const fullCopy = [cp, dev, cl].filter(Boolean).join(' | ');
+                        // Simple, proven prompt format — plain text, not JSON
+                        const imgPrompt = (text: string) =>
+                          `take as a reference this creative and generate 5 different variants with this image. respect the logo 100% faithful and the identity of the brand ${brand}. change the background environment and the character to: ${creative.campaignContext || creative.audienciaReferenciaElegida || 'a different person in the same mood'}. take the same font and Include the exact text '${text}' ensuring flawless spelling with all accents (á é í ó ú ñ). be faithful to the initial logo and the graphic lines. do not add white space — use only the brand colors from the reference.`;
 
-                        // Spell out all copy for video anti-hallucination
-                        const spellWord = (w: string) => `"${w}"=${w.split('').join('-')}`;
-                        const spellPhrase = (t: string) => t.split(' ').map(spellWord).join(' ');
-
-                        const videoPrompt = JSON.stringify({
-                          task: `Generate 15-second video ad for "${brand}". Reference image = EXACT visual template.`,
-                          brandIdentity: {
-                            logo: `"${brand}" logo PIXEL-IDENTICAL in every frame. Same position as reference.`,
-                            colors: "EXACT color palette from reference. No shifts, no white, no new colors.",
-                            typography: "EXACT font from reference for all text. Same weight, size, color.",
-                            graphicElements: "Same borders, shapes, silhouettes, overlays as reference in every frame."
-                          },
-                          textRendering: {
-                            rule: "Render text CHARACTER BY CHARACTER. Every accent (á é í ó ú ñ) MANDATORY. Do NOT autocorrect, rephrase, or modify.",
-                            verification: "After rendering each word, verify letter count matches specification below."
-                          },
-                          frames: [
-                            ...(cp ? [{ time: "0-4s", text: cp, spelled: spellPhrase(cp), visual: "Dynamic opening — person in action. Text large and centered." }] : []),
-                            ...(dev ? [{ time: "4-10s", text: dev, spelled: spellPhrase(dev), visual: "Brand narrative — human connection. Text transitions from previous." }] : []),
-                            ...(cl ? [{ time: "10-13s", text: cl, spelled: spellPhrase(cl), visual: "Product hero — clean composition. Text prominent." }] : []),
-                            { time: "13-15s", text: `${brand}`, visual: "End card — logo centered on brand primary color. No other text." }
-                          ],
-                          cinematography: "Cinematic, smooth transitions (dissolve/crossfade). Same colors, font, style ALL 15s. ONE cohesive ad."
-                        }, null, 2);
-
-                        const resizePrompt = creative.resizePrompt;
+                        const videoPrompt =
+                          `generate a 15-second video ad for ${brand} using this reference image as visual template. respect the logo 100% faithful and the identity of the brand ${brand} in every frame. ` +
+                          (cp ? `frame 1 (0-4s): show text '${cp}' with dynamic opening. ` : '') +
+                          (dev ? `frame 2 (4-10s): show text '${dev}' with brand narrative. ` : '') +
+                          (cl ? `frame 3 (10-13s): show text '${cl}' with product hero moment. ` : '') +
+                          `frame 4 (13-15s): ${brand} logo centered on brand color. ` +
+                          `take the same font from reference for all text. ensure flawless spelling with all accents (á é í ó ú ñ). be faithful to the initial logo and graphic lines. same colors, same style throughout all 15 seconds. one cohesive ad.`;
 
                         const colorMap: Record<string, string> = { blue: 'text-blue-400', emerald: 'text-emerald-400', amber: 'text-amber-400' };
                         const borderMap: Record<string, string> = { blue: 'border-blue-500/30', emerald: 'border-emerald-500/30', amber: 'border-amber-500/30' };
@@ -967,16 +929,14 @@ export default function App() {
                                       {copiedId === `${creative.id}-f${fi}` ? <><Check className="w-3 h-3 text-green-600" /> Copiado</> : <><Copy className="w-3 h-3" /> Copiar</>}
                                     </button>
                                   </div>
-                                  <div className="bg-stone-900 border-t border-stone-700 p-4 text-xs text-stone-300 leading-relaxed font-mono whitespace-pre-wrap overflow-x-auto">
-                                    <span className="text-purple-400">{'{\n'}</span>
-                                    <span className="text-stone-500">  "task": </span><span className="text-amber-300">"5 variants for </span><span className="text-green-400 font-bold">{brand}</span><span className="text-amber-300">"</span><span className="text-stone-400">,{'\n'}</span>
-                                    <span className="text-stone-500">  "brand": </span><span className="text-stone-400">"Logo </span><span className="text-green-400 font-bold">{brand}</span><span className="text-stone-400"> PIXEL-IDENTICAL. Colors FIXED.",{'\n'}</span>
-                                    <span className="text-red-400 font-bold">  "newText"</span><span className="text-stone-400">: {'{\n'}</span>
-                                    <span className="text-stone-500">    "content": </span><span className={`font-bold ${colorMap[f.color]}`}>"{f.text}"</span><span className="text-stone-400">,{'\n'}</span>
-                                    <span className="text-stone-500">    "spelled": </span><span className="text-red-400">"{(f.text || '').split(' ').map(w => `${w}=${w.split('').join('-')}`).join(' ')}"</span><span className="text-stone-400">{'\n'}</span>
-                                    <span className="text-stone-400">{'  },\n'}</span>
-                                    <span className="text-stone-500">  "changes": </span><span className="text-amber-300">"ONLY person + background. Logo, colors, shapes IMMUTABLE."</span>{'\n'}
-                                    <span className="text-purple-400">{'}'}</span>
+                                  <div className="bg-stone-900 border-t border-stone-700 p-4 text-xs text-stone-300 leading-relaxed whitespace-pre-wrap overflow-x-auto">
+                                    <span className="text-stone-400">take as a reference this creative and generate 5 different variants with this image. respect the logo 100% faithful and the identity of the brand </span>
+                                    <span className="text-green-400 font-bold">{brand}</span>
+                                    <span className="text-stone-400">. change the background environment and the character to: </span>
+                                    <span className="text-amber-300">{creative.campaignContext || creative.audienciaReferenciaElegida || 'a different person in the same mood'}</span>
+                                    <span className="text-stone-400">. take the same font and Include the exact text </span>
+                                    <span className={`font-bold ${colorMap[f.color]}`}>'{f.text}'</span>
+                                    <span className="text-stone-400"> ensuring flawless spelling with all accents (á é í ó ú ñ). be faithful to the initial logo and the graphic lines. do not add white space — use only the brand colors from the reference.</span>
                                   </div>
                                 </div>
                               );
@@ -993,40 +953,14 @@ export default function App() {
                                   {copiedId === `${creative.id}-video` ? <><Check className="w-3 h-3 text-green-600" /> Copiado</> : <><Copy className="w-3 h-3" /> Copiar</>}
                                 </button>
                               </div>
-                              <div className="bg-stone-900 border-t border-stone-700 p-4 text-xs text-stone-300 leading-relaxed font-mono whitespace-pre-wrap overflow-x-auto">
-                                <span className="text-purple-400">{'{\n'}</span>
-                                <span className="text-stone-500">  "task": </span><span className="text-amber-300">"15s video — ALL copy in 1 video"</span><span className="text-stone-400">,{'\n'}</span>
-                                <span className="text-red-400 font-bold">  "antiHallucination"</span><span className="text-stone-400">: {'{\n'}</span>
-                                <span className="text-stone-500">    "brandName": </span><span className="text-stone-400">"ONLY </span><span className="text-green-400 font-bold">{brand}</span><span className="text-stone-400">. NO invented names.",{'\n'}</span>
-                                <span className="text-stone-500">    "logoRule": </span><span className="text-stone-400">"FIXED element, every frame.",{'\n'}</span>
-                                <span className="text-stone-500">    "textRule": </span><span className="text-stone-400">"ONLY text in frames[]. NO inventions."{'\n'}</span>
-                                <span className="text-stone-400">{'  },\n'}</span>
-                                <span className="text-red-400 font-bold">  "spelling"</span><span className="text-stone-400">: "Letter by letter. á é í ó ú ñ mandatory.",{'\n'}</span>
-                                <span className="text-stone-500">  "frames": </span><span className="text-stone-400">{'[\n'}</span>
-                                {cp && <>
-                                  <span className="text-stone-400">{'    { '}</span>
-                                  <span className="text-stone-500">"0-4s"</span><span className="text-stone-400">{': '}</span>
-                                  <span className={`font-bold ${colorMap['blue']}`}>"{cp}"</span>
-                                  <span className="text-stone-400">{' },\n'}</span>
-                                </>}
-                                {dev && <>
-                                  <span className="text-stone-400">{'    { '}</span>
-                                  <span className="text-stone-500">"4-10s"</span><span className="text-stone-400">{': '}</span>
-                                  <span className={`font-bold ${colorMap['emerald']}`}>"{dev}"</span>
-                                  <span className="text-stone-400">{' },\n'}</span>
-                                </>}
-                                {cl && <>
-                                  <span className="text-stone-400">{'    { '}</span>
-                                  <span className="text-stone-500">"10-13s"</span><span className="text-stone-400">{': '}</span>
-                                  <span className={`font-bold ${colorMap['amber']}`}>"{cl}"</span>
-                                  <span className="text-stone-400">{' },\n'}</span>
-                                </>}
-                                <span className="text-stone-400">{'    { '}</span>
-                                <span className="text-stone-500">"13-15s"</span><span className="text-stone-400">{': "Logo '}</span>
+                              <div className="bg-stone-900 border-t border-stone-700 p-4 text-xs text-stone-300 leading-relaxed whitespace-pre-wrap overflow-x-auto">
+                                <span className="text-stone-400">generate a 15-second video ad for </span>
                                 <span className="text-green-400 font-bold">{brand}</span>
-                                <span className="text-stone-400">{' centered" }\n  ],\n'}</span>
-                                <span className="text-stone-500">  "consistency": </span><span className="text-amber-300">"Same colors, font, style ALL 15s. One cohesive ad."</span>{'\n'}
-                                <span className="text-purple-400">{'}'}</span>
+                                <span className="text-stone-400"> using this reference image as visual template. respect the logo 100% faithful in every frame.</span>
+                                {cp && <><br/><span className="text-blue-400">frame 1 (0-4s): '{cp}'</span></>}
+                                {dev && <><br/><span className="text-emerald-400">frame 2 (4-10s): '{dev}'</span></>}
+                                {cl && <><br/><span className="text-amber-400">frame 3 (10-13s): '{cl}'</span></>}
+                                <br/><span className="text-stone-400">frame 4 (13-15s): {brand} logo centered. same font, flawless spelling, same colors throughout all 15s.</span>
                               </div>
                             </div>
                           </>
@@ -1036,32 +970,20 @@ export default function App() {
                       {/* Resize / Adaptation Prompt */}
                       {(() => {
                         const b = creative.identifiedBrand;
-                        const copyText = [creative.copyPrincipal, creative.desarrollo, creative.cierre].filter(Boolean).join(' | ');
-                        const adaptPrompt = JSON.stringify({
-                          task: `Adapt this ${creative.formatAndSize || '1080x1080'} creative to a NEW format for "${b}".`,
-                          concept: "CREATIVE RECOMPOSITION, not outpainting. Analyze: logo position, text position, person/character, brand colors, graphic elements (shapes, borders, silhouettes).",
-                          rules: {
-                            logo: `"${b}" logo PIXEL-IDENTICAL. Reposition for new layout, keep same size.`,
-                            text: `Reposition text for new aspect ratio. Same font, hierarchy. Content: "${copyText}"`,
-                            person: "Reposition naturally. Do NOT stretch or distort.",
-                            colors: "Fill ALL space with BRAND COLORS from reference. NEVER white or gray.",
-                            composition: "Result must look NATIVE for the new format — not stretched or padded."
-                          },
-                          forbidden: "No white space, no stretching, no duplicating, no new text, no color changes.",
-                          currentSize: creative.formatAndSize || '1080x1080'
-                        }, null, 2);
+                        const copyText = [creative.copyPrincipal, creative.desarrollo, creative.cierre].filter(Boolean).join(' ');
+                        const adaptPrompt = `take this ${creative.formatAndSize || '1080x1080'} creative as reference and adapt it to [TARGET SIZE]. this is a creative recomposition, not a simple canvas extension. respect the logo 100% faithful and the identity of the brand ${b}. reposition the text, person, and graphic elements to fit the new aspect ratio harmonically. include the exact text '${copyText}' with flawless spelling and all accents (á é í ó ú ñ). use the same font from the reference. fill all space with the brand colors from the reference — do not add white, gray, or any new color. the result must look like a native design for the new format.`;
                         return (
                           <div className="flex flex-col">
                             <div className="flex items-center justify-between mb-2">
                               <h4 className="text-xs font-bold text-green-700 uppercase tracking-wider flex items-center gap-1">
-                                <Crop className="w-3 h-3" /> Prompt de Adaptación Inteligente
+                                <Crop className="w-3 h-3" /> Prompt de Adaptación
                               </h4>
                               <button onClick={() => copyToClipboard(adaptPrompt, `${creative.id}-resize`)}
                                 className="flex items-center gap-1 px-2 py-1 bg-white hover:bg-green-50 text-stone-600 hover:text-green-600 rounded text-[10px] font-bold transition-colors border border-stone-200 hover:border-green-200">
                                 {copiedId === `${creative.id}-resize` ? <><Check className="w-3 h-3 text-green-600" /> Copiado</> : <><Copy className="w-3 h-3" /> Copiar</>}
                               </button>
                             </div>
-                            <div className="bg-stone-900 border border-stone-700 p-4 rounded-xl text-xs text-stone-300 leading-relaxed font-mono whitespace-pre-wrap overflow-x-auto max-h-[200px] overflow-y-auto">
+                            <div className="bg-green-50/50 border border-green-200 p-4 rounded-xl text-xs text-green-800 leading-relaxed flex-1 overflow-y-auto">
                               {adaptPrompt}
                             </div>
                           </div>
