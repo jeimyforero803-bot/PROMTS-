@@ -24,7 +24,6 @@ export interface CreativeSpec {
   cierre: string;
   brandGuidelines: string;
   masterPromptEn: string;
-  masterPromptEs: string;
   resizePrompt: string;
 }
 
@@ -127,16 +126,17 @@ STEP 6 — DISRUPTIVE, NON-GENERIC COPY:
 - EVERY SINGLE COPY MUST BE UNIQUE. No two creatives with same title or copy.
 - The copy must feel like a professional copywriter wrote it, not a generic AI. Be specific, concrete, and memorable.
 
-STEP 7 — GENERATE masterPromptEn, masterPromptEs, AND resizePrompt FOR EACH CREATIVE:
+STEP 7 — GENERATE masterPromptEn AND resizePrompt FOR EACH CREATIVE:
 
-masterPromptEn (English) and masterPromptEs (Spanish) — these are prompts for AI image generators (Gemini, DALL-E, Midjourney).
-They instruct the AI to take a REFERENCE IMAGE (the original ad) and generate variants where:
+masterPromptEn (English ONLY) — this is the prompt for AI image generators (Gemini, DALL-E, Midjourney, Mixboard).
+It instructs the AI to take a REFERENCE IMAGE (the original ad) and generate variants where:
 - The BRAND IDENTITY is SACRED: logo position, brand colors, graphic elements, borders, shapes stay PIXEL-IDENTICAL
 - The TEXT/COPY changes to the NEW generated copy (copyPrincipal + desarrollo + cierre)
 - The PERSON/CHARACTER changes (different person, same energy/mood)
 - The BACKGROUND can adapt but must match the brand's color palette
 - The TEXT must be rendered CHARACTER BY CHARACTER with perfect spelling including all accents (á é í ó ú ñ)
 - Include the EXACT text that must appear: spell out each word letter by letter in the prompt
+- DO NOT generate masterPromptEs — only English is needed
 
 resizePrompt — this is a prompt for INTELLIGENT FORMAT ADAPTATION (not just outpainting).
 It must instruct the AI to:
@@ -189,10 +189,9 @@ const RESPONSE_SCHEMA = {
           cierre: { type: "STRING" },
           brandGuidelines: { type: "STRING" },
           masterPromptEn: { type: "STRING" },
-          masterPromptEs: { type: "STRING" },
           resizePrompt: { type: "STRING" }
         },
-        required: ["id", "identifiedBrand", "medio", "formatoAnuncio", "creativo", "formatAndSize", "formato", "peso", "textoSpec", "maxTitleChars", "maxCopyChars", "objetivo", "geografia", "audienciaMacro", "audienciaReferencia", "audienciaReferenciaElegida", "campaignContext", "suggestedTitle", "suggestedCopy", "copyPrincipal", "desarrollo", "cierre", "brandGuidelines", "masterPromptEn", "masterPromptEs", "resizePrompt"]
+        required: ["id", "identifiedBrand", "medio", "formatoAnuncio", "creativo", "formatAndSize", "formato", "peso", "textoSpec", "maxTitleChars", "maxCopyChars", "objetivo", "geografia", "audienciaMacro", "audienciaReferencia", "audienciaReferenciaElegida", "campaignContext", "suggestedTitle", "suggestedCopy", "copyPrincipal", "desarrollo", "cierre", "brandGuidelines", "masterPromptEn", "resizePrompt"]
       }
     }
   },
@@ -259,7 +258,7 @@ export async function regenerateCopy(
   creative: CreativeSpec,
   fieldType: 'title' | 'copy',
   feedback: string
-): Promise<{ newText: string; updatedMasterPromptEn: string; updatedMasterPromptEs: string }> {
+): Promise<{ newText: string; updatedMasterPromptEn: string }> {
   const charLimit = fieldType === 'title' ? (creative.maxTitleChars || 40) : (creative.maxCopyChars || 200);
   const currentText = fieldType === 'title' ? creative.suggestedTitle : creative.suggestedCopy;
   const fieldName = fieldType === 'title' ? 'Title' : 'Copy';
@@ -278,10 +277,9 @@ Context:
 - Campaign: ${creative.campaignContext}
 - Current ${fieldName}: "${currentText}"
 - Current Master Prompt (EN): "${creative.masterPromptEn}"
-- Current Master Prompt (ES): "${creative.masterPromptEs}"
 - Feedback: "${feedback}"
 
-CRITICAL: Max ${charLimit} characters. COUNT THEM. FLAWLESS SPANISH.`;
+CRITICAL: Max ${charLimit} characters. COUNT THEM. FLAWLESS SPANISH. Generate a DIFFERENT creative concept — not a minor rewording but a genuinely new angle/idea.`;
 
     const text = await callProxy(prompt, {
       responseMimeType: "application/json",
@@ -289,10 +287,9 @@ CRITICAL: Max ${charLimit} characters. COUNT THEM. FLAWLESS SPANISH.`;
         type: "OBJECT",
         properties: {
           newText: { type: "STRING" },
-          updatedMasterPromptEn: { type: "STRING" },
-          updatedMasterPromptEs: { type: "STRING" }
+          updatedMasterPromptEn: { type: "STRING" }
         },
-        required: ["newText", "updatedMasterPromptEn", "updatedMasterPromptEs"]
+        required: ["newText", "updatedMasterPromptEn"]
       }
     });
 
@@ -304,11 +301,91 @@ CRITICAL: Max ${charLimit} characters. COUNT THEM. FLAWLESS SPANISH.`;
 
     return {
       newText,
-      updatedMasterPromptEn: parsed.updatedMasterPromptEn,
-      updatedMasterPromptEs: parsed.updatedMasterPromptEs
+      updatedMasterPromptEn: parsed.updatedMasterPromptEn
     };
   } catch (error: any) {
     console.error("Error in regenerateCopy:", error);
     throw new Error(error.message || "Error al regenerar el texto.");
+  }
+}
+
+/**
+ * Generate a completely new variant of ALL copy fields (title, copyPrincipal, desarrollo, cierre).
+ * Produces a fresh creative concept for the same audience/platform specs.
+ */
+export async function generateVariant(
+  creative: CreativeSpec
+): Promise<{ suggestedTitle: string; suggestedCopy: string; copyPrincipal: string; desarrollo: string; cierre: string; masterPromptEn: string }> {
+  const titleLimit = creative.maxTitleChars || 40;
+  const copyLimit = creative.maxCopyChars || 200;
+
+  try {
+    const prompt = `You are an Expert Copywriter specializing in DCO (Dynamic Creative Optimization).
+
+Task: Generate a COMPLETELY NEW creative variant — a fresh concept, angle, and tone. NOT a rewording of the current copy.
+
+Context:
+- Brand: ${creative.identifiedBrand}
+- Platform: ${creative.medio} — ${creative.formatoAnuncio}
+- Creative Type: ${creative.creativo}
+- Format: ${creative.formatAndSize}
+- Macro Audience: ${creative.audienciaMacro || 'General'}
+- Micro Persona: ${creative.audienciaReferenciaElegida || 'General'}
+- Driver: ${creative.driverComunicacion || 'N/A'}
+- Campaign: ${creative.campaignContext}
+- Objective: ${creative.objetivo || 'Awareness'}
+
+CURRENT COPY (generate something DIFFERENT from this):
+- Title: "${creative.suggestedTitle}"
+- Copy Principal: "${creative.copyPrincipal}"
+- Desarrollo: "${creative.desarrollo}"
+- Cierre: "${creative.cierre}"
+
+RULES:
+- suggestedTitle: max ${titleLimit} characters. A COMPLETE idea, not truncated.
+- Total of copyPrincipal + desarrollo + cierre: max ${copyLimit} characters combined.
+- copyPrincipal = HOOK — attention-grabbing opening line.
+- desarrollo = BODY — product benefit, reason-to-believe.
+- cierre = CTA — short, actionable call to action.
+- suggestedCopy = concatenation of all three parts.
+- FLAWLESS SPANISH. Zero spelling errors. Correct tildes (á é í ó ú ñ).
+- NO generic filler ("Descubre lo mejor", "Sigue disfrutando"). Be bold, specific, memorable.
+- This must be a genuinely DIFFERENT creative concept — different hook, different angle, different emotional trigger.
+- masterPromptEn: English prompt for Mixboard/image AI using the NEW copy text.
+
+masterPromptEn format:
+"take as a reference this creative and generate 5 different variants with this image. respect the logo 100% faithful and the identity of the brand ${creative.identifiedBrand}. change the background environment and the character to: ${creative.campaignContext || creative.audienciaReferenciaElegida || 'a different setting'}. take the same font and Include the exact text '[NEW COPY PRINCIPAL]' and '[NEW DESARROLLO]' ensuring flawless spelling. be faithful to the initial logo and the graphic lines."`;
+
+    const text = await callProxy(prompt, {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: "OBJECT",
+        properties: {
+          suggestedTitle: { type: "STRING" },
+          suggestedCopy: { type: "STRING" },
+          copyPrincipal: { type: "STRING" },
+          desarrollo: { type: "STRING" },
+          cierre: { type: "STRING" },
+          masterPromptEn: { type: "STRING" }
+        },
+        required: ["suggestedTitle", "suggestedCopy", "copyPrincipal", "desarrollo", "cierre", "masterPromptEn"]
+      }
+    });
+
+    if (!text) throw new Error("La IA no devolvió ninguna respuesta.");
+    const cleanText = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+    const parsed = JSON.parse(cleanText);
+
+    return {
+      suggestedTitle: parsed.suggestedTitle || '',
+      suggestedCopy: parsed.suggestedCopy || '',
+      copyPrincipal: parsed.copyPrincipal || '',
+      desarrollo: parsed.desarrollo || '',
+      cierre: parsed.cierre || '',
+      masterPromptEn: parsed.masterPromptEn || ''
+    };
+  } catch (error: any) {
+    console.error("Error in generateVariant:", error);
+    throw new Error(error.message || "Error al generar variante.");
   }
 }

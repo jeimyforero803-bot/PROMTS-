@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { extractAndOptimizePrompts, regenerateCopy, CreativeSpec } from './lib/gemini';
+import { extractAndOptimizePrompts, regenerateCopy, generateVariant, CreativeSpec } from './lib/gemini';
 import { Loader2, Upload, FileText, Sparkles, AlertCircle, Copy, Check, Layers, Palette, Type, AlignLeft, Tag, Crop, RefreshCw, X, MessageSquare, Download, Image, Lightbulb, Trash2 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -24,6 +24,8 @@ export default function App() {
   } | null>(null);
   const [regenFeedback, setRegenFeedback] = useState('');
   const [isRegenerating, setIsRegenerating] = useState(false);
+
+  const [generatingVariantId, setGeneratingVariantId] = useState<string | null>(null);
 
   const [progress, setProgress] = useState('');
   const [sheetNames, setSheetNames] = useState<string[]>([]);
@@ -160,7 +162,6 @@ export default function App() {
       cierre: cierreVal || '',
       brandGuidelines: '',
       masterPromptEn: `take as a reference this creative and generate 5 different variants with this image. respect the logo 100% faithful and the identity of the brand ${brand}. change the background environment and the character to: ${context}. take the same font and Include the exact text '${title || concepto || ''}' and '${copy || ''}' ensuring flawless spelling. be faithful to the initial logo and the graphic lines.`,
-      masterPromptEs: `toma como referencia esta pieza creativa y genera 5 variantes diferentes con esta imagen. respeta el logo 100% fiel y la identidad de la marca ${brand}. cambia el entorno del fondo y el personaje a: ${context}. usa la misma tipografía e incluye el texto exacto '${title || concepto || ''}' y '${copy || ''}' asegurando ortografía impecable. sé fiel al logo inicial y a las líneas gráficas.`,
       resizePrompt: size ? `OUTPAINT ONLY — extend the canvas to ${size}. DO NOT duplicate, regenerate, or modify the original image. The original creative stays UNTOUCHED in the center. ONLY fill the new empty space around it with a seamless continuation of the background. No new text, no new logos, no new objects. Brand: ${brand}.` : '',
     };
   };
@@ -420,16 +421,15 @@ export default function App() {
       const creative = creatives.find(c => c.id === regenConfig.creativeId);
       if (!creative) throw new Error("Creative not found");
       
-      const { newText, updatedMasterPromptEn, updatedMasterPromptEs } = await regenerateCopy(creative, regenConfig.type, regenFeedback);
-      
+      const { newText, updatedMasterPromptEn } = await regenerateCopy(creative, regenConfig.type, regenFeedback);
+
       setCreatives(prev => prev.map(c => {
         if (c.id === regenConfig.creativeId) {
           return {
             ...c,
             suggestedTitle: regenConfig.type === 'title' ? newText : c.suggestedTitle,
             suggestedCopy: regenConfig.type === 'copy' ? newText : c.suggestedCopy,
-            masterPromptEn: updatedMasterPromptEn,
-            masterPromptEs: updatedMasterPromptEs
+            masterPromptEn: updatedMasterPromptEn
           };
         }
         return c;
@@ -440,6 +440,33 @@ export default function App() {
       alert("Error al regenerar: " + (err.message || "Error desconocido"));
     } finally {
       setIsRegenerating(false);
+    }
+  };
+
+  const handleGenerateVariant = async (creativeId: string) => {
+    const creative = creatives.find(c => c.id === creativeId);
+    if (!creative) return;
+    setGeneratingVariantId(creativeId);
+    try {
+      const variant = await generateVariant(creative);
+      setCreatives(prev => prev.map(c => {
+        if (c.id === creativeId) {
+          return {
+            ...c,
+            suggestedTitle: variant.suggestedTitle,
+            suggestedCopy: variant.suggestedCopy,
+            copyPrincipal: variant.copyPrincipal,
+            desarrollo: variant.desarrollo,
+            cierre: variant.cierre,
+            masterPromptEn: variant.masterPromptEn
+          };
+        }
+        return c;
+      }));
+    } catch (err: any) {
+      alert("Error al generar variante: " + (err.message || "Error desconocido"));
+    } finally {
+      setGeneratingVariantId(null);
     }
   };
 
@@ -659,7 +686,23 @@ export default function App() {
               </div>
               {creatives.map((creative, index) => (
                 <div key={creative.id} className="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden flex flex-col p-6 transition-all hover:shadow-md">
-                  
+
+                  {/* Variant generation button */}
+                  <div className="flex items-center justify-between mb-4 pb-3 border-b border-stone-100">
+                    <span className="text-xs font-bold text-stone-500 uppercase tracking-wider">Fila #{index + 1} — {creative.identifiedBrand}</span>
+                    <button
+                      onClick={() => handleGenerateVariant(creative.id)}
+                      disabled={generatingVariantId === creative.id}
+                      className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-bold rounded-lg text-xs transition-colors shadow-sm"
+                    >
+                      {generatingVariantId === creative.id ? (
+                        <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Generando variante...</>
+                      ) : (
+                        <><RefreshCw className="w-3.5 h-3.5" /> Generar otra variante</>
+                      )}
+                    </button>
+                  </div>
+
                   <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                     {/* DCO Structure Section */}
                     <div className="space-y-4">
