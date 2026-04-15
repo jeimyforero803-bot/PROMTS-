@@ -896,7 +896,7 @@ export default function App() {
 
                         const imgPrompt = (text: string) => {
                           // Spell out each word letter by letter for anti-hallucination
-                          const spelledOut = text.split(' ').map(w => `"${w}" = ${w.split('').join('-')} (${w.length} letras)`).join('\n    ');
+                          const spelledOut = text.split(' ').map(w => `"${w}" = ${w.split('').join('-')} (${w.length} chars)`).join('\n    ');
                           return JSON.stringify({
                             task: `Generate 5 variants of the attached reference image for brand "${brand}".`,
                             concept: "Take the ORIGINAL reference image as a VISUAL TEMPLATE. Keep the EXACT same design system (colors, layout, graphic elements, logo position, typography style). REPLACE the text copy with the new text below. Change ONLY the person/character and background.",
