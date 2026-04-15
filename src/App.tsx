@@ -161,7 +161,7 @@ export default function App() {
       brandGuidelines: '',
       masterPromptEn: `take as a reference this creative and generate 5 different variants with this image. respect the logo 100% faithful and the identity of the brand ${brand}. change the background environment and the character to: ${context}. take the same font and Include the exact text '${title || concepto || ''}' and '${copy || ''}' ensuring flawless spelling. be faithful to the initial logo and the graphic lines.`,
       masterPromptEs: `toma como referencia esta pieza creativa y genera 5 variantes diferentes con esta imagen. respeta el logo 100% fiel y la identidad de la marca ${brand}. cambia el entorno del fondo y el personaje a: ${context}. usa la misma tipografía e incluye el texto exacto '${title || concepto || ''}' y '${copy || ''}' asegurando ortografía impecable. sé fiel al logo inicial y a las líneas gráficas.`,
-      resizePrompt: size ? `Resize this creative from its original dimensions to ${size}. Extend the background naturally using outpainting. Keep all text, logos, and key elements in the same position. Maintain brand identity of ${brand}.` : '',
+      resizePrompt: size ? `OUTPAINT ONLY — extend the canvas to ${size}. DO NOT duplicate, regenerate, or modify the original image. The original creative stays UNTOUCHED in the center. ONLY fill the new empty space around it with a seamless continuation of the background. No new text, no new logos, no new objects. Brand: ${brand}.` : '',
     };
   };
 
