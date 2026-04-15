@@ -127,6 +127,27 @@ STEP 6 — DISRUPTIVE, NON-GENERIC COPY:
 - EVERY SINGLE COPY MUST BE UNIQUE. No two creatives with same title or copy.
 - The copy must feel like a professional copywriter wrote it, not a generic AI. Be specific, concrete, and memorable.
 
+STEP 7 — GENERATE masterPromptEn, masterPromptEs, AND resizePrompt FOR EACH CREATIVE:
+
+masterPromptEn (English) and masterPromptEs (Spanish) — these are prompts for AI image generators (Gemini, DALL-E, Midjourney).
+They instruct the AI to take a REFERENCE IMAGE (the original ad) and generate variants where:
+- The BRAND IDENTITY is SACRED: logo position, brand colors, graphic elements, borders, shapes stay PIXEL-IDENTICAL
+- The TEXT/COPY changes to the NEW generated copy (copyPrincipal + desarrollo + cierre)
+- The PERSON/CHARACTER changes (different person, same energy/mood)
+- The BACKGROUND can adapt but must match the brand's color palette
+- The TEXT must be rendered CHARACTER BY CHARACTER with perfect spelling including all accents (á é í ó ú ñ)
+- Include the EXACT text that must appear: spell out each word letter by letter in the prompt
+
+resizePrompt — this is a prompt for INTELLIGENT FORMAT ADAPTATION (not just outpainting).
+It must instruct the AI to:
+- UNDERSTAND the composition: where the text is, where the person is, where the logo is, what the brand colors are
+- RECOMPOSE the layout for the new aspect ratio (e.g., 1080x1080 → 1200x628 banner)
+- Keep ALL brand elements (logo, colors, graphic shapes) but REDISTRIBUTE them harmonically for the new format
+- The person/character should be repositioned naturally, not stretched
+- Text should be repositioned to fit the new layout while maintaining hierarchy
+- Background fills should use the brand's color palette, NOT white space
+- This is a CREATIVE RECOMPOSITION, not a simple canvas extension
+
 CRITICAL RULES:
 1. "Zelva" / "Zelva Agencia Creativa" is the agency, NOT the brand.
 2. FLAWLESS SPANISH: Zero spelling mistakes, correct tildes. NO EMOJIS.
