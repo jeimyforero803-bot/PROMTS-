@@ -896,15 +896,17 @@ export default function App() {
 
                         const fullCopy = [cp, dev, cl].filter(Boolean).join(' ');
 
-                        // Simple, proven prompt format — plain text, not JSON
+                        // Spell out text word by word for anti-hallucination
+                        const spellText = (t: string) => t.split(' ').map(w => `"${w}" [${w.split('').join('-')}]`).join(', ');
+
                         const imgPrompt = (text: string) =>
-                          `take as a reference this creative and generate 5 different variants with this image. respect the logo 100% faithful and the identity of the brand ${brand}. change the background environment and the character to: ${creative.campaignContext || creative.audienciaReferenciaElegida || 'a different person in the same mood'}. take the same font and Include the exact text '${text}' ensuring flawless spelling with all accents (á é í ó ú ñ). be faithful to the initial logo and the graphic lines. do not add white space — use only the brand colors from the reference.`;
+                          `take as a reference this creative and generate 5 different variants with this image. respect the logo 100% faithful and the identity of the brand ${brand}. change the background environment and the character to: ${creative.campaignContext || creative.audienciaReferenciaElegida || 'a different person in the same mood'}. take the same font and Include the exact text as follows:\n\nTEXT TO RENDER (word by word): ${spellText(text)}\n\nFULL TEXT: "${text}"\n\nSPELLING RULES: render each word CHARACTER BY CHARACTER as spelled in brackets above. every accent mark (á é í ó ú ñ) is mandatory. do NOT autocorrect, rephrase, or modify any word. do NOT invent or add any text not listed above.\n\nbe faithful to the initial logo and the graphic lines. do not add white space — use only the brand colors from the reference.`;
 
                         const videoPrompt =
                           `generate a 15-second video ad for ${brand} using this reference image as visual template. respect the logo 100% faithful and the identity of the brand ${brand} in every frame. ` +
-                          (cp ? `frame 1 (0-4s): show text '${cp}' with dynamic opening. ` : '') +
-                          (dev ? `frame 2 (4-10s): show text '${dev}' with brand narrative. ` : '') +
-                          (cl ? `frame 3 (10-13s): show text '${cl}' with product hero moment. ` : '') +
+                          (cp ? `frame 1 (0-4s): show text word by word: ${spellText(cp)}. FULL TEXT: "${cp}". ` : '') +
+                          (dev ? `frame 2 (4-10s): show text word by word: ${spellText(dev)}. FULL TEXT: "${dev}". ` : '') +
+                          (cl ? `frame 3 (10-13s): show text word by word: ${spellText(cl)}. FULL TEXT: "${cl}". ` : '') +
                           `frame 4 (13-15s): ${brand} logo centered on brand color. ` +
                           `take the same font from reference for all text. ensure flawless spelling with all accents (á é í ó ú ñ). be faithful to the initial logo and graphic lines. same colors, same style throughout all 15 seconds. one cohesive ad.`;
 
@@ -930,13 +932,15 @@ export default function App() {
                                     </button>
                                   </div>
                                   <div className="bg-stone-900 border-t border-stone-700 p-4 text-xs text-stone-300 leading-relaxed whitespace-pre-wrap overflow-x-auto">
-                                    <span className="text-stone-400">take as a reference this creative and generate 5 different variants with this image. respect the logo 100% faithful and the identity of the brand </span>
+                                    <span className="text-stone-400">take as a reference this creative and generate 5 variants. respect the logo 100% faithful — brand </span>
                                     <span className="text-green-400 font-bold">{brand}</span>
-                                    <span className="text-stone-400">. change the background environment and the character to: </span>
-                                    <span className="text-amber-300">{creative.campaignContext || creative.audienciaReferenciaElegida || 'a different person in the same mood'}</span>
-                                    <span className="text-stone-400">. take the same font and Include the exact text </span>
-                                    <span className={`font-bold ${colorMap[f.color]}`}>'{f.text}'</span>
-                                    <span className="text-stone-400"> ensuring flawless spelling with all accents (á é í ó ú ñ). be faithful to the initial logo and the graphic lines. do not add white space — use only the brand colors from the reference.</span>
+                                    <span className="text-stone-400">. change background + character to: </span>
+                                    <span className="text-amber-300">{creative.campaignContext || creative.audienciaReferenciaElegida || 'different person, same mood'}</span>
+                                    <span className="text-stone-400">.{'\n\n'}</span>
+                                    <span className="text-red-400 font-bold">TEXT TO RENDER (word by word):{'\n'}</span>
+                                    <span className={`font-bold ${colorMap[f.color]}`}>{(f.text || '').split(' ').map(w => `"${w}" [${w.split('').join('-')}]`).join(', ')}</span>
+                                    <span className="text-stone-400">{'\n\n'}</span>
+                                    <span className="text-stone-400">same font, faithful to logo + graphic lines. no white space — brand colors only.</span>
                                   </div>
                                 </div>
                               );
