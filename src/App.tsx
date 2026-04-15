@@ -973,7 +973,7 @@ export default function App() {
                                     <span className="text-stone-500">  "brand": </span><span className="text-stone-400">"Logo </span><span className="text-green-400 font-bold">{brand}</span><span className="text-stone-400"> PIXEL-IDENTICAL. Colors FIXED.",{'\n'}</span>
                                     <span className="text-red-400 font-bold">  "newText"</span><span className="text-stone-400">: {'{\n'}</span>
                                     <span className="text-stone-500">    "content": </span><span className={`font-bold ${colorMap[f.color]}`}>"{f.text}"</span><span className="text-stone-400">,{'\n'}</span>
-                                    <span className="text-stone-500">    "spelled": </span><span className="text-red-400">"{f.text.split(' ').map((w: string) => `${w}=${w.split('').join('-')}`).join(' ')}"</span><span className="text-stone-400">{'\n'}</span>
+                                    <span className="text-stone-500">    "spelled": </span><span className="text-red-400">"{(f.text || '').split(' ').map(w => `${w}=${w.split('').join('-')}`).join(' ')}"</span><span className="text-stone-400">{'\n'}</span>
                                     <span className="text-stone-400">{'  },\n'}</span>
                                     <span className="text-stone-500">  "changes": </span><span className="text-amber-300">"ONLY person + background. Logo, colors, shapes IMMUTABLE."</span>{'\n'}
                                     <span className="text-purple-400">{'}'}</span>
