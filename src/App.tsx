@@ -1035,26 +1035,26 @@ export default function App() {
 
                       {/* Resize / Adaptation Prompt */}
                       {(() => {
+                        const b = creative.identifiedBrand;
+                        const copyText = [creative.copyPrincipal, creative.desarrollo, creative.cierre].filter(Boolean).join(' | ');
                         const adaptPrompt = JSON.stringify({
-                          task: `Adapt this ${creative.formatAndSize || '1080x1080'} creative to a NEW format while maintaining brand consistency for "${brand}".`,
-                          concept: "This is CREATIVE RECOMPOSITION, NOT simple outpainting. Analyze the reference image and understand: (1) where the logo is, (2) where the text/copy is, (3) where the person/character is, (4) what the brand colors are, (5) what graphic elements exist (shapes, borders, silhouettes, overlays).",
+                          task: `Adapt this ${creative.formatAndSize || '1080x1080'} creative to a NEW format for "${b}".`,
+                          concept: "CREATIVE RECOMPOSITION, not outpainting. Analyze: logo position, text position, person/character, brand colors, graphic elements (shapes, borders, silhouettes).",
                           rules: {
-                            logo: `"${brand}" logo stays PIXEL-IDENTICAL. Reposition to fit new layout but keep same size.`,
-                            text: `Reposition the text to fit the new aspect ratio. Keep same font, size ratio, and visual hierarchy. Text content: "${[cp, dev, cl].filter(Boolean).join(' | ')}"`,
-                            person: "Reposition the person/character naturally within the new composition. Do NOT stretch or distort.",
-                            colors: "Fill ALL empty space with BRAND COLORS from reference. NEVER use white, gray, or any color not in the original palette.",
-                            graphicElements: "Redistribute decorative shapes, borders, silhouettes to fill the new format harmonically.",
-                            composition: "The result must look like a NATIVE design for the new format — not a stretched or padded version of the original."
+                            logo: `"${b}" logo PIXEL-IDENTICAL. Reposition for new layout, keep same size.`,
+                            text: `Reposition text for new aspect ratio. Same font, hierarchy. Content: "${copyText}"`,
+                            person: "Reposition naturally. Do NOT stretch or distort.",
+                            colors: "Fill ALL space with BRAND COLORS from reference. NEVER white or gray.",
+                            composition: "Result must look NATIVE for the new format — not stretched or padded."
                           },
-                          forbidden: "Do NOT: add white space, stretch elements, duplicate elements, add new text, change colors, invent new graphic elements, crop the person awkwardly.",
-                          currentSize: creative.formatAndSize || '1080x1080',
-                          targetFormats: "Adapt to: 1200x628 (banner), 1920x1080 (landscape), 300x250 (display), 728x90 (leaderboard), 160x600 (skyscraper) — or any size specified by user."
+                          forbidden: "No white space, no stretching, no duplicating, no new text, no color changes.",
+                          currentSize: creative.formatAndSize || '1080x1080'
                         }, null, 2);
                         return (
                           <div className="flex flex-col">
                             <div className="flex items-center justify-between mb-2">
                               <h4 className="text-xs font-bold text-green-700 uppercase tracking-wider flex items-center gap-1">
-                                <Crop className="w-3 h-3" /> Prompt de Adaptación Inteligente (Recomposición)
+                                <Crop className="w-3 h-3" /> Prompt de Adaptación Inteligente
                               </h4>
                               <button onClick={() => copyToClipboard(adaptPrompt, `${creative.id}-resize`)}
                                 className="flex items-center gap-1 px-2 py-1 bg-white hover:bg-green-50 text-stone-600 hover:text-green-600 rounded text-[10px] font-bold transition-colors border border-stone-200 hover:border-green-200">
